@@ -14,12 +14,18 @@
   --purple-grad: linear-gradient(145deg, #ab47bc, #7e57c2);
   --blue-grad: linear-gradient(145deg, #42a5f5, #5c6bc0);
   --green-grad: linear-gradient(135deg, #22c55e, #4ade80);
+  --amber-grad: linear-gradient(145deg, #f59e0b, #fbbf24);
+  --lime-grad: linear-gradient(145deg, #65a30d, #a3e635);
+  --rose-grad: linear-gradient(145deg, #f43f5e, #fb7185);
   --progress-grad: linear-gradient(90deg, #ff7043, #fbbf24);
   --orange-shadow: rgba(255, 112, 67, 0.35);
   --teal-shadow: rgba(38, 198, 218, 0.35);
   --purple-shadow: rgba(171, 71, 188, 0.35);
   --blue-shadow: rgba(66, 165, 245, 0.35);
   --green-shadow: rgba(34, 197, 94, 0.4);
+  --amber-shadow: rgba(245, 158, 11, 0.35);
+  --lime-shadow: rgba(101, 163, 13, 0.35);
+  --rose-shadow: rgba(244, 63, 94, 0.35);
 }
 
 * {
@@ -345,6 +351,9 @@ button {
 .category-button.cat-fruits { background: var(--orange-grad); box-shadow: 0 6px 20px var(--orange-shadow); }
 .category-button.cat-animals { background: var(--teal-grad); box-shadow: 0 6px 20px var(--teal-shadow); }
 .category-button.cat-objects { background: var(--purple-grad); box-shadow: 0 6px 20px var(--purple-shadow); }
+.category-button.cat-school { background: var(--amber-grad); box-shadow: 0 6px 20px var(--amber-shadow); }
+.category-button.cat-nature { background: var(--lime-grad); box-shadow: 0 6px 20px var(--lime-shadow); }
+.category-button.cat-bodyparts { background: var(--rose-grad); box-shadow: 0 6px 20px var(--rose-shadow); }
 .category-button.cat-all { background: var(--blue-grad); box-shadow: 0 6px 20px var(--blue-shadow); }
 
 .category-button .row-icon {
@@ -526,13 +535,41 @@ button {
   background: var(--white);
   border: 3px solid #e7e5e4;
   border-radius: 18px;
-  padding: 18px 10px;
+  padding: 18px 44px;
   font-size: 20px;
   font-weight: 800;
   cursor: pointer;
   min-height: 66px;
   box-shadow: var(--shadow-sm);
   color: var(--ink);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.option-speak {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  background: rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+}
+
+.option-speak:active {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.option-button:disabled .option-speak {
+  opacity: 0.4;
 }
 
 .option-button.correct {

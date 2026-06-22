@@ -3,7 +3,10 @@
 const CATEGORY_META = {
   fruits: { emoji: "🍎", label: "水果" },
   animals: { emoji: "🐶", label: "動物" },
-  objects: { emoji: "🧸", label: "其它" }
+  objects: { emoji: "🧸", label: "其它" },
+  school: { emoji: "🎒", label: "文具" },
+  nature: { emoji: "🌳", label: "大自然" },
+  bodyparts: { emoji: "✋", label: "身體" }
 };
 
 function initQuiz(root, questions, { onBack, onHome, subjectId = "english-mc" } = {}) {
@@ -46,12 +49,22 @@ function initQuiz(root, questions, { onBack, onHome, subjectId = "english-mc" } 
       </div>
       ${state.answered ? renderFeedback(q) : ""}
       <div class="quiz-options">
-        ${state.options.map((opt) => `<button class="option-button${optionClass(opt, q)}" data-value="${escapeHtml(opt)}" ${state.answered ? "disabled" : ""}>${escapeHtml(opt)}</button>`).join("")}
+        ${state.options.map((opt) => `<button class="option-button${optionClass(opt, q)}" data-value="${escapeHtml(opt)}" ${state.answered ? "disabled" : ""}>
+          <span class="option-text">${escapeHtml(opt)}</span>
+          <span class="option-speak" data-word="${escapeHtml(opt)}" aria-label="發音">🔊</span>
+        </button>`).join("")}
       </div>
       ${state.answered ? `<button class="next-button" id="quiz-next">${state.index + 1 >= state.questions.length ? "查看結果 🏆" : "下一題 →"}</button>` : ""}
     `;
 
     root.querySelector("#quiz-back").addEventListener("click", () => onBack && onBack());
+
+    root.querySelectorAll(".option-speak").forEach((el) => {
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        speakWord(el.dataset.word);
+      });
+    });
 
     if (state.answered) {
       root.querySelector("#quiz-next").addEventListener("click", () => {
@@ -86,15 +99,20 @@ function initQuiz(root, questions, { onBack, onHome, subjectId = "english-mc" } 
     if (state.answered) return;
     state.answered = true;
     state.selectedValue = selected;
-    if (selected === question.correctAnswer) {
+    const isCorrect = selected === question.correctAnswer;
+    if (isCorrect) {
       state.correctCount += 1;
     } else {
       logMistake(subjectId, question, selected);
     }
     render();
-    if (selected === question.correctAnswer) {
+    if (isCorrect) {
       spawnConfetti(root.querySelector(".quiz-prompt"));
+      playCorrectSound();
+    } else {
+      playWrongSound();
     }
+    setTimeout(() => speakWord(question.correctAnswer), 400);
   }
 
   function renderResult() {
@@ -178,6 +196,40 @@ function logMistake(subjectId, question, selectedWrong) {
     timestamp: new Date().toISOString()
   });
   localStorage.setItem(MISTAKES_KEY, JSON.stringify(log));
+}
+
+// 用瀏覽器內建語音合成唸出單字，不需要任何音檔資源。
+function speakWord(word) {
+  if (!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(word);
+  utter.lang = "en-US";
+  utter.rate = 0.85;
+  speechSynthesis.speak(utter);
+}
+
+// 答對/答錯提示音用 Web Audio API 即時合成，同樣不需要音檔資源。
+let audioCtx = null;
+function playTone(freq, duration, type = "sine") {
+  audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  osc.connect(gain).connect(audioCtx.destination);
+  gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+  osc.start();
+  osc.stop(audioCtx.currentTime + duration);
+}
+
+function playCorrectSound() {
+  playTone(660, 0.12);
+  setTimeout(() => playTone(880, 0.18), 110);
+}
+
+function playWrongSound() {
+  playTone(220, 0.25, "sawtooth");
 }
 
 function spawnConfetti(container) {
