@@ -14,6 +14,18 @@ document.addEventListener("DOMContentLoaded", () => {
     navigateTo("screen-english-menu");
   });
 
+  // 國語：目前只有注音符號手寫練習，先直接進入，之後題型變多再加分類選單
+  document.querySelector("#home-chinese").addEventListener("click", () => {
+    const chineseHandwritingRoot = document.querySelector("#chinese-handwriting-root");
+    navigateTo("screen-chinese-handwriting");
+    initHandwriting(chineseHandwritingRoot, ZHUYIN_LETTERS, {
+      onBack: () => navigateTo("screen-home"),
+      wordMap: ZHUYIN_WORDS,
+      showCaseToggle: false,
+      unitLabel: "符號"
+    });
+  });
+
   // 選擇題：先選分類，按分類卡片即進入題目
   const quizSetup = document.querySelector("#quiz-setup");
   const quizRoot = document.querySelector("#quiz-root");

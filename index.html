@@ -29,10 +29,10 @@
           <span class="subject-title">英文</span>
           <span class="subject-badge">準備好了！</span>
         </button>
-        <button class="subject-card cat-chinese" disabled>
+        <button class="subject-card cat-chinese" id="home-chinese">
           <span class="subject-icon">📖</span>
           <span class="subject-title">國語</span>
-          <span class="subject-badge">即將推出</span>
+          <span class="subject-badge">準備好了！</span>
         </button>
         <button class="subject-card cat-math" disabled>
           <span class="subject-icon">🔢</span>
@@ -152,6 +152,10 @@
       <div id="handwriting-root"></div>
     </section>
 
+    <section class="screen" id="screen-chinese-handwriting" hidden>
+      <div id="chinese-handwriting-root"></div>
+    </section>
+
     <section class="screen" id="screen-memory" hidden>
       <div id="memory-setup">
         <button class="back-pill" data-target="screen-english-menu">◀ 返回</button>
@@ -217,6 +221,7 @@
 
   <script src="data/english-mc.js"></script>
   <script src="data/english-letters.js"></script>
+  <script src="data/chinese-zhuyin.js"></script>
   <script src="js/quiz.js"></script>
   <script src="js/handwriting.js"></script>
   <script src="js/memory.js"></script>

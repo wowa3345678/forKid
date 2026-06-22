@@ -779,6 +779,13 @@ button {
 }
 
 /* ---------- Handwriting ---------- */
+#handwriting-root,
+#chinese-handwriting-root {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .hw-header {
   display: flex;
   align-items: center;

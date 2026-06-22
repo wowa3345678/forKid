@@ -2,8 +2,14 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "static-site",
+      "name": "static-site-windows",
       "runtimeExecutable": "C:\\ProgramData\\Anaconda3\\python.exe",
+      "runtimeArgs": ["-m", "http.server", "5500"],
+      "port": 5500
+    },
+    {
+      "name": "static-site-mac",
+      "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "5500"],
       "port": 5500
     }

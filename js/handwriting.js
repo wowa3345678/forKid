@@ -1,7 +1,7 @@
 // 手寫練習元件：畫布顯示淡色範本字，用 Pointer Events 畫筆跡（支援 Apple Pencil 壓力感應）。
 // letters 參數吃 data/english-letters.js 的 schema，wordMap 吃 data/english-mc.js 匯出的 ENGLISH_WORDS（letter -> {word, emoji}）。
 // 之後國字也可用同一個元件，只要換資料。
-function initHandwriting(root, letters, { onBack, wordMap = {} } = {}) {
+function initHandwriting(root, letters, { onBack, wordMap = {}, showCaseToggle = true, unitLabel = "字母" } = {}) {
   const state = { index: 0, caseMode: "upper", isDrawing: false, lastPoint: null, logicalWidth: 0, logicalHeight: 0 };
 
   render();
@@ -16,15 +16,17 @@ function initHandwriting(root, letters, { onBack, wordMap = {} } = {}) {
           <button class="hw-nav-arrow" id="hw-next-letter" aria-label="下一個">›</button>
         </div>
       </div>
+      ${showCaseToggle ? `
       <div class="case-toggle">
         <button class="chip selected" data-case="upper">大寫 Aa</button>
         <button class="chip" data-case="lower">小寫 aa</button>
       </div>
+      ` : ""}
       <div class="hw-info-card">
         <div class="hw-letter-badge" id="hw-badge"></div>
         <div>
           <div class="hw-word-row"><span class="hw-word-emoji" id="hw-word-emoji"></span><span id="hw-word-text"></span></div>
-          <div class="hw-info-sub">✍️ 練習書寫這個字母</div>
+          <div class="hw-info-sub">✍️ 練習書寫這個${unitLabel}</div>
         </div>
       </div>
       <div class="hw-canvas-card">
@@ -33,7 +35,7 @@ function initHandwriting(root, letters, { onBack, wordMap = {} } = {}) {
       </div>
       <div class="handwriting-actions">
         <button class="clear-button" id="hw-clear">🗑️ 清除</button>
-        <button class="hw-next-button" id="hw-next">下一個字母 →</button>
+        <button class="hw-next-button" id="hw-next">下一個${unitLabel} →</button>
       </div>
     `;
 
@@ -88,7 +90,7 @@ function initHandwriting(root, letters, { onBack, wordMap = {} } = {}) {
   function updateInfo() {
     const upper = letters[state.index].upper;
     const info = wordMap[upper] || { word: "", emoji: "" };
-    root.querySelector("#hw-counter").textContent = `字母 ${state.index + 1} / ${letters.length}`;
+    root.querySelector("#hw-counter").textContent = `${unitLabel} ${state.index + 1} / ${letters.length}`;
     root.querySelector("#hw-badge").textContent = currentLetter();
     root.querySelector("#hw-word-emoji").textContent = info.emoji;
     root.querySelector("#hw-word-text").textContent = info.word;

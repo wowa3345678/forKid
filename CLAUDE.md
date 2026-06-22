@@ -7,17 +7,23 @@
 純靜態網站，沒有 build step、沒有框架，直接用瀏覽器打開（或用簡單的 HTTP server）即可跑：
 
 ```
-index.html          # 畫面結構（home / 英文選單 / 選擇題 / 手寫練習）
+index.html          # 畫面結構（home / 英文選單 / 選擇題 / 手寫練習 / 翻牌記憶卡 / 國語手寫練習）
 css/style.css        # 全站樣式（design system 見下方）
 js/app.js             # 畫面導覽（.screen 用 hidden 屬性切換）
 js/quiz.js            # 通用選擇題元件 initQuiz(root, questions, opts)
-js/handwriting.js     # 通用手寫練習元件 initHandwriting(root, letters, opts)
-data/english-mc.js    # 英文選擇題題庫（依分類，不綁字母）+ 匯出 ENGLISH_WORDS 給手寫練習共用
+js/handwriting.js     # 通用手寫練習元件 initHandwriting(root, letters, opts)，沒有大小寫概念的科目（如注音）可傳 showCaseToggle:false 隱藏大小寫切換 UI
+js/memory.js          # 通用翻牌記憶卡元件 initMemory(root, wordMap, opts)
+data/english-mc.js    # 英文選擇題題庫（依分類，不綁字母）+ 匯出 ENGLISH_WORDS、ENGLISH_CATEGORY_WORDS 給手寫練習/記憶卡共用
 data/english-letters.js # 英文手寫字母清單（大小寫）
+data/chinese-zhuyin.js # 國語注音符號手寫題庫（37 個符號 + 示範詞 wordMap），upper/lower 設成同一符號搭配 showCaseToggle:false 重用手寫元件
 grade1-2_english_vocabulary.md # 國小一二年級英文單字參考清單（出題詞彙來源，唯讀）
 ```
 
-本機預覽：`.claude/launch.json` 設定用 `python -m http.server 5500`（用完整路徑 `C:\ProgramData\Anaconda3\python.exe`，純 `python` 在這個環境會找不到）。
+本機預覽：`.claude/launch.json` 設定用 `python -m http.server 5500`，裡面有兩組設定給不同電腦用（這個 repo 會在 Windows 跟 Mac 兩台機器上 clone）：
+- `static-site-windows`：用完整路徑 `C:\ProgramData\Anaconda3\python.exe`，因為純 `python` 指令在這個 Windows 環境的 preview 啟動流程裡找不到（PATH 沒帶到 Anaconda）。
+- `static-site-mac`：用 `python3`（macOS 內建路徑 `/usr/bin/python3` 通常就在預設 PATH 裡，不用寫死絕對路徑）。
+
+用 `preview_start` 啟動時依照當前作業系統選對應的 name；Windows 用 `static-site-windows`，Mac 用 `static-site-mac`。
 
 ## 通用化資料 schema（給國語/數學擴充用）
 
