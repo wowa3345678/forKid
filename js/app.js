@@ -54,4 +54,36 @@ document.addEventListener("DOMContentLoaded", () => {
       wordMap: ENGLISH_WORDS
     });
   });
+
+  // 翻牌記憶卡：先選分類，按分類卡片即進入配對遊戲
+  const memorySetup = document.querySelector("#memory-setup");
+  const memoryRoot = document.querySelector("#memory-root");
+
+  document.querySelector("#menu-memory").addEventListener("click", () => {
+    memorySetup.hidden = false;
+    memoryRoot.hidden = true;
+    memoryRoot.innerHTML = "";
+    navigateTo("screen-memory");
+  });
+
+  document.querySelectorAll("#memory-setup .category-button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const category = btn.dataset.category;
+      const wordMap = category === "all"
+        ? Object.assign({}, ...Object.values(ENGLISH_CATEGORY_WORDS))
+        : ENGLISH_CATEGORY_WORDS[category];
+      const meta = CATEGORY_META[category] || { label: "綜合" };
+      memorySetup.hidden = true;
+      memoryRoot.hidden = false;
+      initMemory(memoryRoot, wordMap, {
+        onBack: () => {
+          memorySetup.hidden = false;
+          memoryRoot.hidden = true;
+          memoryRoot.innerHTML = "";
+        },
+        onHome: () => navigateTo("screen-home"),
+        categoryLabel: meta.label
+      });
+    });
+  });
 });

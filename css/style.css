@@ -705,6 +705,79 @@ button {
   min-height: 66px;
 }
 
+/* ---------- Memory card 翻牌記憶卡 ---------- */
+#memory-root {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.menu-row.accent-memory .row-icon { background: var(--amber-grad); }
+
+.memory-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.memory-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.memory-card {
+  aspect-ratio: 1;
+  border-radius: 16px;
+  border: 3px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  padding: 4px;
+  transition: transform 0.15s;
+}
+
+.memory-card:active {
+  transform: scale(0.95);
+}
+
+.memory-card.face-down {
+  background: var(--orange-grad);
+  color: var(--white);
+}
+
+.memory-card.face-up {
+  background: var(--white);
+  border-color: #e7e5e4;
+}
+
+.memory-card.matched {
+  background: #dcfce7;
+  border-color: #22c55e;
+}
+
+.memory-card.mismatch {
+  background: #fee2e2;
+  border-color: #ef4444;
+  animation: wrongShake 0.3s;
+}
+
+.memory-card .card-emoji-img {
+  width: 60%;
+  height: 60%;
+  object-fit: contain;
+}
+
+.memory-card .card-word {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--ink);
+  text-align: center;
+}
+
 /* ---------- Handwriting ---------- */
 .hw-header {
   display: flex;

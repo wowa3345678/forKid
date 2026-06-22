@@ -72,6 +72,9 @@
 
   window.ENGLISH_MC = questions;
 
+  // 給翻牌記憶卡用：直接重用同一份分類單字表，不重複定義。
+  window.ENGLISH_CATEGORY_WORDS = CATEGORY_WORDS;
+
   // 給手寫練習用：每個字母對應的單字 + emoji。
   window.ENGLISH_WORDS = Object.fromEntries(
     Object.entries(LETTER_WORD).map(([letter, word]) => [

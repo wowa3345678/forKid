@@ -76,6 +76,14 @@
           </span>
           <span class="row-arrow">▶</span>
         </button>
+        <button class="menu-row accent-memory" id="menu-memory">
+          <span class="row-icon">🃏</span>
+          <span class="row-text">
+            <span class="row-title">翻牌記憶卡</span>
+            <span class="row-subtitle">翻牌找配對，訓練記憶力</span>
+          </span>
+          <span class="row-arrow">▶</span>
+        </button>
       </div>
     </section>
 
@@ -144,12 +152,74 @@
       <div id="handwriting-root"></div>
     </section>
 
+    <section class="screen" id="screen-memory" hidden>
+      <div id="memory-setup">
+        <button class="back-pill" data-target="screen-english-menu">◀ 返回</button>
+        <h2 class="section-heading">選擇類別</h2>
+        <p class="section-subtitle">選一個類別來玩翻牌記憶卡！</p>
+        <div class="category-list">
+          <button class="category-button cat-fruits" data-category="fruits">
+            <span class="row-icon">🍎</span>
+            <span class="row-text">
+              <span class="row-title">水果</span>
+              <span class="row-subtitle">Fruits — 蘋果、香蕉、橙子...</span>
+            </span>
+          </button>
+          <button class="category-button cat-animals" data-category="animals">
+            <span class="row-icon">🐶</span>
+            <span class="row-text">
+              <span class="row-title">動物</span>
+              <span class="row-subtitle">Animals — 貓、狗、小鳥...</span>
+            </span>
+          </button>
+          <button class="category-button cat-objects" data-category="objects">
+            <span class="row-icon">🧸</span>
+            <span class="row-text">
+              <span class="row-title">其它</span>
+              <span class="row-subtitle">Others — 書、球、汽車...</span>
+            </span>
+          </button>
+          <button class="category-button cat-school" data-category="school">
+            <span class="row-icon">🎒</span>
+            <span class="row-text">
+              <span class="row-title">文具</span>
+              <span class="row-subtitle">School — 書、筆、書包...</span>
+            </span>
+          </button>
+          <button class="category-button cat-nature" data-category="nature">
+            <span class="row-icon">🌳</span>
+            <span class="row-text">
+              <span class="row-title">大自然</span>
+              <span class="row-subtitle">Nature — 太陽、月亮、樹...</span>
+            </span>
+          </button>
+          <button class="category-button cat-bodyparts" data-category="bodyparts">
+            <span class="row-icon">✋</span>
+            <span class="row-text">
+              <span class="row-title">身體</span>
+              <span class="row-subtitle">Body — 眼睛、耳朵、手...</span>
+            </span>
+          </button>
+          <button class="category-button cat-all" data-category="all">
+            <span class="row-icon">🌈</span>
+            <span class="row-text">
+              <span class="row-title">全部</span>
+              <span class="row-subtitle">All — 綜合練習</span>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div id="memory-root" hidden></div>
+    </section>
+
   </div>
 
   <script src="data/english-mc.js"></script>
   <script src="data/english-letters.js"></script>
   <script src="js/quiz.js"></script>
   <script src="js/handwriting.js"></script>
+  <script src="js/memory.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
