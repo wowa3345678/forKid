@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>小一練習</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+
+    <section class="screen" id="screen-home">
+      <div class="home-topbar">
+        <span>🌈</span>
+        <span class="home-tag">學習很好玩！</span>
+        <span>⭐</span>
+      </div>
+      <h1 class="app-title">小一練習</h1>
+      <p class="app-subtitle">點選科目，開始練習吧！</p>
+      <div class="mascot">🦉</div>
+      <div class="speech-bubble">👋 嗨！我是小博！</div>
+
+      <div class="subject-grid">
+        <button class="subject-card cat-english" id="home-english">
+          <span class="subject-icon">abc</span>
+          <span class="subject-title">英文</span>
+          <span class="subject-badge">準備好了！</span>
+        </button>
+        <button class="subject-card cat-chinese" disabled>
+          <span class="subject-icon">📖</span>
+          <span class="subject-title">國語</span>
+          <span class="subject-badge">即將推出</span>
+        </button>
+        <button class="subject-card cat-math" disabled>
+          <span class="subject-icon">🔢</span>
+          <span class="subject-title">數學</span>
+          <span class="subject-badge">即將推出</span>
+        </button>
+      </div>
+
+      <p class="home-footer">🦉 與貓頭鷹小博一起學習 ✨</p>
+    </section>
+
+    <section class="screen" id="screen-english-menu" hidden>
+      <button class="back-pill" data-target="screen-home">◀ 返回首頁</button>
+      <div class="menu-header">
+        <span class="subject-icon">abc</span>
+        <div>
+          <h2>英文練習</h2>
+          <p class="app-subtitle">選擇你想練習的方式</p>
+        </div>
+      </div>
+
+      <div class="info-banner">
+        <span class="info-emoji">🧐</span>
+        <span>加油！你選哪一種？一起練習英文！💪</span>
+      </div>
+
+      <div class="menu-list">
+        <button class="menu-row accent-quiz" id="menu-quiz">
+          <span class="row-icon">❓</span>
+          <span class="row-text">
+            <span class="row-title">選擇題</span>
+            <span class="row-subtitle">看圖片，選出正確的英文單字</span>
+          </span>
+          <span class="row-arrow">▶</span>
+        </button>
+        <button class="menu-row accent-handwriting" id="menu-handwriting">
+          <span class="row-icon">✏️</span>
+          <span class="row-text">
+            <span class="row-title">手寫練習</span>
+            <span class="row-subtitle">跟著範例，練習書寫英文字母</span>
+          </span>
+          <span class="row-arrow">▶</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-quiz" hidden>
+      <div id="quiz-setup">
+        <button class="back-pill" data-target="screen-english-menu">◀ 返回</button>
+        <h2 class="section-heading">選擇類別</h2>
+        <p class="section-subtitle">選一個你想練習的類別！</p>
+        <div class="category-list">
+          <button class="category-button cat-fruits" data-category="fruits">
+            <span class="row-icon">🍎</span>
+            <span class="row-text">
+              <span class="row-title">水果</span>
+              <span class="row-subtitle">Fruits — 蘋果、香蕉、橙子...</span>
+            </span>
+          </button>
+          <button class="category-button cat-animals" data-category="animals">
+            <span class="row-icon">🐶</span>
+            <span class="row-text">
+              <span class="row-title">動物</span>
+              <span class="row-subtitle">Animals — 貓、狗、小鳥...</span>
+            </span>
+          </button>
+          <button class="category-button cat-objects" data-category="objects">
+            <span class="row-icon">🧸</span>
+            <span class="row-text">
+              <span class="row-title">其它</span>
+              <span class="row-subtitle">Others — 書、球、汽車...</span>
+            </span>
+          </button>
+          <button class="category-button cat-all" data-category="all">
+            <span class="row-icon">🌈</span>
+            <span class="row-text">
+              <span class="row-title">全部</span>
+              <span class="row-subtitle">All — A 到 Z 綜合練習</span>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div id="quiz-root" hidden></div>
+    </section>
+
+    <section class="screen" id="screen-handwriting" hidden>
+      <div id="handwriting-root"></div>
+    </section>
+
+  </div>
+
+  <script src="data/english-mc.js"></script>
+  <script src="data/english-letters.js"></script>
+  <script src="js/quiz.js"></script>
+  <script src="js/handwriting.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
