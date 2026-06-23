@@ -152,8 +152,47 @@
       <div id="handwriting-root"></div>
     </section>
 
+    <section class="screen" id="screen-chinese-menu" hidden>
+      <button class="back-pill" data-target="screen-home">◀ 返回首頁</button>
+      <div class="menu-header">
+        <span class="subject-icon">📖</span>
+        <div>
+          <h2>國語練習</h2>
+          <p class="app-subtitle">選擇你想練習的方式</p>
+        </div>
+      </div>
+
+      <div class="info-banner">
+        <span class="info-emoji">🧐</span>
+        <span>加油！你選哪一種？一起練習注音！💪</span>
+      </div>
+
+      <div class="menu-list">
+        <button class="menu-row accent-handwriting" id="menu-chinese-handwriting">
+          <span class="row-icon">✏️</span>
+          <span class="row-text">
+            <span class="row-title">注音手寫練習</span>
+            <span class="row-subtitle">跟著範例，練習書寫注音符號</span>
+          </span>
+          <span class="row-arrow">▶</span>
+        </button>
+        <button class="menu-row accent-quiz" id="menu-zhuyin-builder">
+          <span class="row-icon">🧩</span>
+          <span class="row-text">
+            <span class="row-title">注音拼音積木</span>
+            <span class="row-subtitle">點選聲母、韻母、聲調，拼出正確注音</span>
+          </span>
+          <span class="row-arrow">▶</span>
+        </button>
+      </div>
+    </section>
+
     <section class="screen" id="screen-chinese-handwriting" hidden>
       <div id="chinese-handwriting-root"></div>
+    </section>
+
+    <section class="screen" id="screen-zhuyin-builder" hidden>
+      <div id="zhuyin-builder-root"></div>
     </section>
 
     <section class="screen" id="screen-memory" hidden>
@@ -222,9 +261,11 @@
   <script src="data/english-mc.js"></script>
   <script src="data/english-letters.js"></script>
   <script src="data/chinese-zhuyin.js"></script>
+  <script src="data/zhuyin-syllables.js"></script>
   <script src="js/quiz.js"></script>
   <script src="js/handwriting.js"></script>
   <script src="js/memory.js"></script>
+  <script src="js/zhuyin-builder.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

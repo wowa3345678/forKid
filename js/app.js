@@ -14,15 +14,28 @@ document.addEventListener("DOMContentLoaded", () => {
     navigateTo("screen-english-menu");
   });
 
-  // 國語：目前只有注音符號手寫練習，先直接進入，之後題型變多再加分類選單
+  // 國語：先進選單，選「注音手寫練習」或「注音拼音積木」
   document.querySelector("#home-chinese").addEventListener("click", () => {
+    navigateTo("screen-chinese-menu");
+  });
+
+  document.querySelector("#menu-chinese-handwriting").addEventListener("click", () => {
     const chineseHandwritingRoot = document.querySelector("#chinese-handwriting-root");
     navigateTo("screen-chinese-handwriting");
     initHandwriting(chineseHandwritingRoot, ZHUYIN_LETTERS, {
-      onBack: () => navigateTo("screen-home"),
+      onBack: () => navigateTo("screen-chinese-menu"),
       wordMap: ZHUYIN_WORDS,
       showCaseToggle: false,
       unitLabel: "符號"
+    });
+  });
+
+  document.querySelector("#menu-zhuyin-builder").addEventListener("click", () => {
+    const zhuyinBuilderRoot = document.querySelector("#zhuyin-builder-root");
+    navigateTo("screen-zhuyin-builder");
+    initZhuyinBuilder(zhuyinBuilderRoot, ZHUYIN_SYLLABLES, {
+      onBack: () => navigateTo("screen-chinese-menu"),
+      onHome: () => navigateTo("screen-home")
     });
   });
 
