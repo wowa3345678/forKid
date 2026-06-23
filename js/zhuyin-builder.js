@@ -54,9 +54,8 @@ function initZhuyinBuilder(root, syllables, { onBack, onHome, subjectId = "zhuyi
       <div class="quiz-prompt">
         <img class="prompt-emoji-img" src="${url}" alt="${escapeHtml(q.emoji)}" onerror="this.outerHTML='<span class=&quot;prompt-emoji&quot;>${q.emoji}</span>'">
         <span class="zb-target-char">${escapeHtml(q.char)}</span>
-        <span class="prompt-caption">請選出這個字的注音</span>
+        ${renderCaption(q)}
       </div>
-      ${state.answered ? renderFeedback(q) : ""}
       <div class="zb-preview">${renderPreview()}</div>
       ${q.initial ? `
       <div class="zb-block-row">
@@ -131,13 +130,16 @@ function initZhuyinBuilder(root, syllables, { onBack, onHome, subjectId = "zhuyi
     </button>`;
   }
 
-  function renderFeedback(q) {
+  function renderCaption(q) {
+    if (!state.answered) {
+      return `<span class="prompt-caption">請選出這個字的注音</span>`;
+    }
     const isCorrect = state.selected.initial === q.initial && state.selected.final === q.final && state.selected.tone === q.tone;
     if (isCorrect) {
-      return `<div class="feedback-banner is-correct">🎉 ✨ 💥<br>答對了！太棒了！</div>`;
+      return `<span class="prompt-caption is-correct">🎉 答對了！太棒了！</span>`;
     }
     const correctSpelling = `${q.initial}${q.final}${TONE_MARKS[q.tone]}`;
-    return `<div class="feedback-banner is-wrong">💡 正確注音是：<span class="feedback-answer">${escapeHtml(correctSpelling)}</span></div>`;
+    return `<span class="prompt-caption is-wrong">💡 正確答案：<span class="prompt-answer">${escapeHtml(correctSpelling)}</span></span>`;
   }
 
   function handleConfirm(q) {

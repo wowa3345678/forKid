@@ -13,9 +13,12 @@ js/app.js             # 畫面導覽（.screen 用 hidden 屬性切換）
 js/quiz.js            # 通用選擇題元件 initQuiz(root, questions, opts)
 js/handwriting.js     # 通用手寫練習元件 initHandwriting(root, letters, opts)，沒有大小寫概念的科目（如注音）可傳 showCaseToggle:false 隱藏大小寫切換 UI
 js/memory.js          # 通用翻牌記憶卡元件 initMemory(root, wordMap, opts)
+js/zhuyin-builder.js  # 注音拼音點選積木元件 initZhuyinBuilder(root, syllables, opts)
+js/mistake-review.js  # 錯題複習元件 initMistakeReview(root, opts)，讀 quiz.js 寫入的 forkid:mistakes，去重後列清單，點一筆可跳回原出題元件單獨重練那一題
 data/english-mc.js    # 英文選擇題題庫（依分類，不綁字母）+ 匯出 ENGLISH_WORDS、ENGLISH_CATEGORY_WORDS 給手寫練習/記憶卡共用
 data/english-letters.js # 英文手寫字母清單（大小寫）
 data/chinese-zhuyin.js # 國語注音符號手寫題庫（37 個符號 + 示範詞 wordMap），upper/lower 設成同一符號搭配 showCaseToggle:false 重用手寫元件
+data/zhuyin-syllables.js # 國語注音拼音積木題庫（常用字拆解成聲母/韻母/聲調）
 grade1-2_english_vocabulary.md # 國小一二年級英文單字參考清單（出題詞彙來源，唯讀）
 ```
 

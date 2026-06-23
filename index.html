@@ -41,6 +41,15 @@
         </button>
       </div>
 
+      <button class="mistake-review-card" id="home-mistake-review">
+        <span class="mistake-review-icon">📝</span>
+        <span class="row-text">
+          <span class="row-title">錯題複習</span>
+          <span class="row-subtitle">重新練習答錯的題目</span>
+        </span>
+        <span class="mistake-review-badge" id="mistake-review-badge">尚無錯題</span>
+      </button>
+
       <p class="home-footer">🦉 與貓頭鷹小博一起學習 ✨</p>
     </section>
 
@@ -195,6 +204,18 @@
       <div id="zhuyin-builder-root"></div>
     </section>
 
+    <section class="screen" id="screen-mistake-review" hidden>
+      <button class="back-pill" data-target="screen-home">◀ 返回首頁</button>
+      <div class="menu-header">
+        <span class="subject-icon icon-mistake">📝</span>
+        <div>
+          <h2>錯題複習</h2>
+          <p class="app-subtitle">點一題回去再練習一次</p>
+        </div>
+      </div>
+      <div id="mistake-review-root"></div>
+    </section>
+
     <section class="screen" id="screen-memory" hidden>
       <div id="memory-setup">
         <button class="back-pill" data-target="screen-english-menu">◀ 返回</button>
@@ -266,6 +287,7 @@
   <script src="js/handwriting.js"></script>
   <script src="js/memory.js"></script>
   <script src="js/zhuyin-builder.js"></script>
+  <script src="js/mistake-review.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

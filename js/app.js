@@ -111,4 +111,35 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
   });
+
+  // 錯題複習：點首頁卡片進清單，點清單裡的一筆會跳回原本的出題元件（選擇題/拼音積木）單獨重練那一題，
+  // 練完按 ◀ 會回到錯題清單而不是原本科目的選單，所以每次都重新呼叫 openMistakeReview 取得最新清單。
+  function openMistakeReview() {
+    navigateTo("screen-mistake-review");
+    initMistakeReview(document.querySelector("#mistake-review-root"), {
+      onRetry: (subject, info) => {
+        if (subject === "english-mc") {
+          quizSetup.hidden = true;
+          quizRoot.hidden = false;
+          quizRoot.innerHTML = "";
+          navigateTo("screen-quiz");
+          info.launch(quizRoot, {
+            onBack: openMistakeReview,
+            onHome: () => navigateTo("screen-home"),
+            subjectId: "english-mc"
+          });
+        } else if (subject === "zhuyin-builder") {
+          const zhuyinBuilderRoot = document.querySelector("#zhuyin-builder-root");
+          navigateTo("screen-zhuyin-builder");
+          info.launch(zhuyinBuilderRoot, {
+            onBack: openMistakeReview,
+            onHome: () => navigateTo("screen-home")
+          });
+        }
+      }
+    });
+  }
+
+  document.querySelector("#home-mistake-review").addEventListener("click", openMistakeReview);
+  refreshMistakeBadge();
 });
