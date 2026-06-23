@@ -208,6 +208,16 @@ function speakWord(word) {
   speechSynthesis.speak(utter);
 }
 
+// 用瀏覽器內建語音合成唸出中文提示句（手寫練習評分結果等），跟 speakWord() 共用同一套合成引擎，只是語言/語速不同。
+function speakText(text, lang = "zh-TW") {
+  if (!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = lang;
+  utter.rate = 0.95;
+  speechSynthesis.speak(utter);
+}
+
 // 答對/答錯提示音用 Web Audio API 即時合成，同樣不需要音檔資源。
 let audioCtx = null;
 function playTone(freq, duration, type = "sine") {

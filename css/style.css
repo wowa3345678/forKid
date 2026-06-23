@@ -516,6 +516,12 @@ button {
   font-weight: 700;
 }
 
+.feedback-banner.is-good {
+  background: #e0f2fe;
+  color: #075985;
+  font-size: 18px;
+}
+
 .feedback-banner.is-wrong .feedback-answer {
   display: block;
   margin-top: 4px;
@@ -941,6 +947,20 @@ button {
   color: var(--white);
   background: var(--green-grad);
   box-shadow: 0 6px 20px var(--green-shadow);
+  cursor: pointer;
+  min-height: 66px;
+}
+
+.confirm-button {
+  flex: 2;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--white);
+  background: var(--orange-grad);
+  box-shadow: 0 6px 20px var(--orange-shadow);
   cursor: pointer;
   min-height: 66px;
 }
