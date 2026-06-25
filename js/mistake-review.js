@@ -22,6 +22,26 @@ const MISTAKE_LOOKUP = {
       categoryLabel: meta.label,
       launch: (root, opts) => initZhuyinBuilder(root, [s], opts)
     };
+  },
+  "addition-quiz": (questionId) => {
+    const pools = window.ADDITION_QUIZ_PROBLEMS || {};
+    const q = [...(pools.chick || []), ...(pools.snake || []), ...(pools.tiger || [])].find((item) => item.id === questionId);
+    if (!q) return null;
+    return {
+      emoji: "➕",
+      categoryLabel: "加法測驗",
+      launch: (root, opts) => initMathQuiz(root, [q], { ...opts, operator: "+", icon: "➕", categoryLabel: "加法測驗", subjectId: "addition-quiz" })
+    };
+  },
+  "subtraction-quiz": (questionId) => {
+    const pools = window.SUBTRACTION_QUIZ_PROBLEMS || {};
+    const q = [...(pools.chick || []), ...(pools.snake || []), ...(pools.tiger || [])].find((item) => item.id === questionId);
+    if (!q) return null;
+    return {
+      emoji: "➖",
+      categoryLabel: "減法測驗",
+      launch: (root, opts) => initMathQuiz(root, [q], { ...opts, operator: "-", icon: "➖", categoryLabel: "減法測驗", subjectId: "subtraction-quiz" })
+    };
   }
 };
 

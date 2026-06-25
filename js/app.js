@@ -39,6 +39,46 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // 數學：先進選單，「加法測驗／減法測驗」都用 initMathQuiz 共用引擎，先選難度（小雞/蛇/老虎）再進測驗
+  document.querySelector("#home-math").addEventListener("click", () => {
+    navigateTo("screen-math-menu");
+  });
+
+  document.querySelector("#menu-addition-quiz").addEventListener("click", () => {
+    const additionQuizRoot = document.querySelector("#addition-quiz-root");
+    navigateTo("screen-addition-quiz");
+    initMathQuiz(additionQuizRoot, ADDITION_QUIZ_PROBLEMS, {
+      operator: "+",
+      icon: "➕",
+      categoryLabel: "加法測驗",
+      subjectId: "addition-quiz",
+      onBack: () => navigateTo("screen-math-menu"),
+      onHome: () => navigateTo("screen-home")
+    });
+  });
+
+  document.querySelector("#menu-subtraction-quiz").addEventListener("click", () => {
+    const subtractionQuizRoot = document.querySelector("#subtraction-quiz-root");
+    navigateTo("screen-subtraction-quiz");
+    initMathQuiz(subtractionQuizRoot, SUBTRACTION_QUIZ_PROBLEMS, {
+      operator: "-",
+      icon: "➖",
+      categoryLabel: "減法測驗",
+      subjectId: "subtraction-quiz",
+      onBack: () => navigateTo("screen-math-menu"),
+      onHome: () => navigateTo("screen-home")
+    });
+  });
+
+  document.querySelector("#menu-carry-teach").addEventListener("click", () => {
+    const carryTeachRoot = document.querySelector("#carry-teach-root");
+    navigateTo("screen-carry-teach");
+    initCarryAdditionTeach(carryTeachRoot, CARRY_ADDITION_PROBLEMS, {
+      onBack: () => navigateTo("screen-math-menu"),
+      onHome: () => navigateTo("screen-home")
+    });
+  });
+
   // 選擇題：先選分類，按分類卡片即進入題目
   const quizSetup = document.querySelector("#quiz-setup");
   const quizRoot = document.querySelector("#quiz-root");
@@ -132,6 +172,20 @@ document.addEventListener("DOMContentLoaded", () => {
           const zhuyinBuilderRoot = document.querySelector("#zhuyin-builder-root");
           navigateTo("screen-zhuyin-builder");
           info.launch(zhuyinBuilderRoot, {
+            onBack: openMistakeReview,
+            onHome: () => navigateTo("screen-home")
+          });
+        } else if (subject === "addition-quiz") {
+          const additionQuizRoot = document.querySelector("#addition-quiz-root");
+          navigateTo("screen-addition-quiz");
+          info.launch(additionQuizRoot, {
+            onBack: openMistakeReview,
+            onHome: () => navigateTo("screen-home")
+          });
+        } else if (subject === "subtraction-quiz") {
+          const subtractionQuizRoot = document.querySelector("#subtraction-quiz-root");
+          navigateTo("screen-subtraction-quiz");
+          info.launch(subtractionQuizRoot, {
             onBack: openMistakeReview,
             onHome: () => navigateTo("screen-home")
           });

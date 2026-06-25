@@ -34,10 +34,10 @@
           <span class="subject-title">國語</span>
           <span class="subject-badge">準備好了！</span>
         </button>
-        <button class="subject-card cat-math" disabled>
+        <button class="subject-card cat-math" id="home-math">
           <span class="subject-icon">🔢</span>
           <span class="subject-title">數學</span>
-          <span class="subject-badge">即將推出</span>
+          <span class="subject-badge">準備好了！</span>
         </button>
       </div>
 
@@ -204,6 +204,61 @@
       <div id="zhuyin-builder-root"></div>
     </section>
 
+    <section class="screen" id="screen-math-menu" hidden>
+      <button class="back-pill" data-target="screen-home">◀ 返回首頁</button>
+      <div class="menu-header">
+        <span class="subject-icon">🔢</span>
+        <div>
+          <h2>數學練習</h2>
+          <p class="app-subtitle">選擇你想練習的方式</p>
+        </div>
+      </div>
+
+      <div class="info-banner">
+        <span class="info-emoji">🧐</span>
+        <span>加油！我們一起來學數學！💪</span>
+      </div>
+
+      <div class="menu-list">
+        <button class="menu-row accent-quiz" id="menu-addition-quiz">
+          <span class="row-icon">➕</span>
+          <span class="row-text">
+            <span class="row-title">加法測驗</span>
+            <span class="row-subtitle">選難度，挑戰不進位的加法計算題</span>
+          </span>
+          <span class="row-arrow">▶</span>
+        </button>
+        <button class="menu-row accent-quiz" id="menu-subtraction-quiz">
+          <span class="row-icon">➖</span>
+          <span class="row-text">
+            <span class="row-title">減法測驗</span>
+            <span class="row-subtitle">選難度，挑戰不退位的減法計算題</span>
+          </span>
+          <span class="row-arrow">▶</span>
+        </button>
+        <button class="menu-row accent-carry" id="menu-carry-teach">
+          <span class="row-icon">🧱</span>
+          <span class="row-text">
+            <span class="row-title">進位教學</span>
+            <span class="row-subtitle">用積木學「個位湊10進位到十位」</span>
+          </span>
+          <span class="row-arrow">▶</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-addition-quiz" hidden>
+      <div id="addition-quiz-root"></div>
+    </section>
+
+    <section class="screen" id="screen-subtraction-quiz" hidden>
+      <div id="subtraction-quiz-root"></div>
+    </section>
+
+    <section class="screen" id="screen-carry-teach" hidden>
+      <div id="carry-teach-root"></div>
+    </section>
+
     <section class="screen" id="screen-mistake-review" hidden>
       <button class="back-pill" data-target="screen-home">◀ 返回首頁</button>
       <div class="menu-header">
@@ -283,10 +338,15 @@
   <script src="data/english-letters.js"></script>
   <script src="data/chinese-zhuyin.js"></script>
   <script src="data/zhuyin-syllables.js"></script>
+  <script src="data/carry-addition.js"></script>
+  <script src="data/addition-quiz.js"></script>
+  <script src="data/subtraction-quiz.js"></script>
   <script src="js/quiz.js"></script>
   <script src="js/handwriting.js"></script>
   <script src="js/memory.js"></script>
   <script src="js/zhuyin-builder.js"></script>
+  <script src="js/carry-addition-teach.js"></script>
+  <script src="js/math-quiz.js"></script>
   <script src="js/mistake-review.js"></script>
   <script src="js/app.js"></script>
 </body>

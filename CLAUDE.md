@@ -15,10 +15,15 @@ js/handwriting.js     # 通用手寫練習元件 initHandwriting(root, letters, 
 js/memory.js          # 通用翻牌記憶卡元件 initMemory(root, wordMap, opts)
 js/zhuyin-builder.js  # 注音拼音點選積木元件 initZhuyinBuilder(root, syllables, opts)
 js/mistake-review.js  # 錯題複習元件 initMistakeReview(root, opts)，讀 quiz.js 寫入的 forkid:mistakes，去重後列清單，點一筆可跳回原出題元件單獨重練那一題
+js/carry-addition-teach.js # 十位數加法進位教學元件 initCarryAdditionTeach(root, problems, opts)，用十格積木視覺化「個位湊10綁成1個十、搬到十位」，每題拆成算個位/綁十/算十位/看結果四步驟，是教學流程不是測驗，答錯不記錄錯題本
+js/math-quiz.js       # 通用數學測驗引擎 initMathQuiz(root, problemsInput, opts)，加法測驗/減法測驗共用，差異只在 opts.operator（+/-）跟資料內容。problemsInput 給 {chick,snake,tiger} 三層物件會先顯示難度選擇畫面（小雞/蛇/老虎），給單一陣列（錯題複習單題重練用）則跳過難度選擇直接進測驗。一題一個算式 4 選 1，答錯會記錄到 forkid:mistakes
 data/english-mc.js    # 英文選擇題題庫（依分類，不綁字母）+ 匯出 ENGLISH_WORDS、ENGLISH_CATEGORY_WORDS 給手寫練習/記憶卡共用
 data/english-letters.js # 英文手寫字母清單（大小寫）
 data/chinese-zhuyin.js # 國語注音符號手寫題庫（37 個符號 + 示範詞 wordMap），upper/lower 設成同一符號搭配 showCaseToggle:false 重用手寫元件
 data/zhuyin-syllables.js # 國語注音拼音積木題庫（常用字拆解成聲母/韻母/聲調）
+data/carry-addition.js # 進位教學題庫（兩位數+兩位數，刻意挑個位相加會超過10、十位相加+進位不超過9的組合），教學元件專用，不分難度
+data/addition-quiz.js # 加法測驗題庫（不進位），{chick,snake,tiger} 三層難度，規則是逐位相加都不超過9
+data/subtraction-quiz.js # 減法測驗題庫（不退位），{chick,snake,tiger} 三層難度，規則是被減數逐位都大於等於減數對應位
 grade1-2_english_vocabulary.md # 國小一二年級英文單字參考清單（出題詞彙來源，唯讀）
 ```
 
@@ -44,6 +49,8 @@ grade1-2_english_vocabulary.md # 國小一二年級英文單字參考清單（�
 ```
 
 手寫練習只要準備 `{ upper, lower }` 陣列 + 一份 `wordMap`（`letter -> {word, emoji}`）即可重用 `initHandwriting`。
+
+**數學計算題（加法/減法測驗）的難度分層慣例**：用「小雞🐥簡單／蛇🐍中等／老虎🐯困難」三種動物代表難度，資料寫成 `{ chick: [...], snake: [...], tiger: [...] }` 三層物件丟給 `initMathQuiz`，元件會先顯示難度選擇畫面（重用 `.category-button.cat-chick/.cat-snake/.cat-tiger`），選完才進測驗。要加新的數學測驗科目，只要準備同樣的三層資料 + 在 `js/app.js` 呼叫 `initMathQuiz(root, data, {operator, icon, categoryLabel, subjectId, onBack, onHome})`，不用改元件本身。錯題複習單題重練時則直接傳單一陣列（不是三層物件）給 `initMathQuiz`，元件會跳過難度選擇直接進入那一題。
 
 **選擇題題庫不是「1 字母 1 題」**：`data/english-mc.js` 用 `CATEGORY_WORDS = { 分類: { 單字: emoji, ... } }` 組織，每個單字各自成一題，干擾選項從同分類單字池隨機抽 3 個。要加新題目只要在對應分類物件裡加一筆 `單字: emoji`；要加新分類，除了加 `CATEGORY_WORDS` 的 key，還要在 `js/quiz.js` 的 `CATEGORY_META` 加 emoji/label、在 `index.html` 的 `.category-list` 加一顆 `.category-button.cat-xxx`、在 `css/style.css` 加對應漸層色（見下方色票）。手寫練習仍維持 `LETTER_WORD`（A~Z 各一個代表單字）獨立維護，不受選擇題分類調整影響。
 
@@ -74,6 +81,9 @@ grade1-2_english_vocabulary.md # 國小一二年級英文單字參考清單（�
 | 黃褐漸層（文具類別） | `linear-gradient(145deg, #F59E0B, #FBBF24)` |
 | 萊姆綠漸層（大自然類別） | `linear-gradient(145deg, #65A30D, #A3E635)` |
 | 玫紅漸層（身體類別） | `linear-gradient(145deg, #F43F5E, #FB7185)` |
+| 黃色漸層（小雞🐥難度，數學測驗最簡單） | `linear-gradient(145deg, #FBBF24, #FDE047)` |
+| 綠色漸層（蛇🐍難度，數學測驗中等） | `linear-gradient(145deg, #16A34A, #4ADE80)` |
+| 深橘紅漸層（老虎🐯難度，數學測驗最難） | `linear-gradient(145deg, #EA580C, #DC2626)` |
 | 進度條漸層 | `linear-gradient(90deg, #FF7043, #FBBF24)` |
 | 答對 | 背景 `#DCFCE7` / 邊框 `#22C55E` / 文字 `#166534` |
 | 答錯 | 背景 `#FEE2E2` / 邊框 `#EF4444` / 文字 `#991B1B` |
