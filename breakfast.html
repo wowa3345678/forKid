@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>女兒早餐店</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    /* 這是一支獨立、自給自足的單檔頁面：樣式跟腳本都內嵌，不依賴 css/style.css 或 js/ 底下任何檔案，
+       直接用瀏覽器打開就能跑。設計語彙（顏色/圓角/陰影/66px 觸控目標）沿用小一練習網的 design system。 */
+    :root {
+      --bg: #fff9f0;
+      --ink: #292524;
+      --ink-soft: #78716c;
+      --ink-faint: #a8a29e;
+      --white: #ffffff;
+      --radius-lg: 28px;
+      --radius-md: 22px;
+      --radius-sm: 16px;
+      --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.06);
+      --breakfast-grad: linear-gradient(145deg, #f472b6, #fb7185);
+      --breakfast-shadow: rgba(244, 114, 182, 0.35);
+      --green-grad: linear-gradient(135deg, #22c55e, #4ade80);
+      --green-shadow: rgba(34, 197, 94, 0.4);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Nunito", "Arial Rounded MT Bold", Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    button { font-family: inherit; }
+
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 48px;
+    }
+
+    /* 根容器統一 16px 間距，讓每一排區塊自動有呼吸空間。 */
+    #order-root {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ---------- 店招 ---------- */
+    .shop-head {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .shop-sign {
+      font-size: 64px;
+      line-height: 1;
+      animation: bounceSign 2.2s ease-in-out infinite;
+    }
+
+    @keyframes bounceSign {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .shop-title {
+      font-size: clamp(32px, 7vw, 48px);
+      font-weight: 900;
+      margin: 0;
+    }
+
+    .shop-subtitle {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      margin: 0;
+    }
+
+    .info-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #fff1f2;
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      font-weight: 800;
+      font-size: 15px;
+      color: #9f1239;
+    }
+
+    .info-banner .info-emoji { font-size: 26px; }
+
+    .order-count {
+      align-self: flex-end;
+      background: var(--white);
+      border-radius: var(--radius-sm);
+      padding: 8px 14px;
+      font-weight: 800;
+      font-size: 15px;
+      color: var(--ink-soft);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* ---------- 類別區塊 ---------- */
+    .bo-group {
+      background: var(--white);
+      border: 3px solid #f5f5f4;
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .bo-group.accent-main { border-color: #fde68a; }
+    .bo-group.accent-protein { border-color: #fecdd3; }
+    .bo-group.accent-fruit { border-color: #d9f99d; }
+    .bo-group.accent-drink { border-color: #a5f3fc; }
+
+    .bo-group-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* 類別圖示放淺色底 + 彩色描邊，不用飽和漸層，否則 💪 / 🥤 這種暖色 Twemoji 會跟底色糊在一起。 */
+    .bo-group-icon {
+      width: 44px;
+      height: 44px;
+      flex: 0 0 44px;
+      border-radius: 14px;
+      border: 2.5px solid transparent;
+      background: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .bo-group.accent-main .bo-group-icon { border-color: #fbbf24; background: #fffbeb; }
+    .bo-group.accent-protein .bo-group-icon { border-color: #fb7185; background: #fff1f2; }
+    .bo-group.accent-fruit .bo-group-icon { border-color: #a3e635; background: #f7fee7; }
+    .bo-group.accent-drink .bo-group-icon { border-color: #4dd0e1; background: #ecfeff; }
+
+    .bo-group-icon-img {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+    }
+
+    .bo-group-icon-img.is-fallback {
+      font-size: 24px;
+      line-height: 28px;
+    }
+
+    .bo-group-label {
+      flex: 1;
+      font-size: 24px;
+      font-weight: 900;
+    }
+
+    .bo-group-pick {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--ink-faint);
+      white-space: nowrap;
+    }
+
+    .bo-group-pick.is-picked {
+      color: var(--white);
+      background: var(--green-grad);
+      border-radius: 999px;
+      padding: 5px 12px;
+    }
+
+    .bo-item-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+      gap: 10px;
+    }
+
+    .bo-item {
+      position: relative;
+      border: 3px solid #f5f5f4;
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      padding: 12px 6px 10px;
+      min-height: 112px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: transform 0.1s ease;
+    }
+
+    .bo-item:active { transform: translateY(2px); }
+
+    .bo-item-emoji {
+      width: 46px;
+      height: 46px;
+      object-fit: contain;
+    }
+
+    .bo-item-emoji.is-fallback {
+      font-size: 40px;
+      line-height: 46px;
+    }
+
+    .bo-item-name {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--ink);
+      text-align: center;
+    }
+
+    .bo-item-check {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #22c55e;
+      color: var(--white);
+      font-size: 14px;
+      font-weight: 900;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .bo-item.selected {
+      border-color: #22c55e;
+      background: #dcfce7;
+      box-shadow: 0 4px 14px var(--green-shadow);
+    }
+
+    .bo-item.selected .bo-item-check {
+      display: flex;
+      animation: correctPop 0.3s ease;
+    }
+
+    @keyframes correctPop {
+      0% { transform: scale(0.4); }
+      70% { transform: scale(1.25); }
+      100% { transform: scale(1); }
+    }
+
+    /* ---------- 我的餐盤 + 送出 ---------- */
+    .bo-summary {
+      background: var(--white);
+      border: 3px dashed #e7e5e4;
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .bo-summary-label {
+      font-size: 15px;
+      font-weight: 900;
+      color: var(--ink-soft);
+    }
+
+    .bo-summary-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .bo-summary-chip,
+    .bo-history-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff7ed;
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 15px;
+      font-weight: 800;
+      color: #9a3412;
+    }
+
+    .bo-chip-emoji {
+      width: 22px;
+      height: 22px;
+      object-fit: contain;
+    }
+
+    .bo-chip-emoji.is-fallback {
+      font-size: 18px;
+      line-height: 22px;
+    }
+
+    .bo-summary-empty {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--ink-faint);
+    }
+
+    .big-button {
+      width: 100%;
+      border: none;
+      border-radius: 18px;
+      padding: 18px;
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--white);
+      background: var(--breakfast-grad);
+      box-shadow: 0 6px 20px var(--breakfast-shadow);
+      cursor: pointer;
+      min-height: 66px;
+    }
+
+    .big-button:disabled {
+      background: #e7e5e4;
+      color: var(--ink-faint);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .ghost-button {
+      width: 100%;
+      border: 2px solid #e7e5e4;
+      border-radius: 18px;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--ink-soft);
+      background: var(--white);
+      cursor: pointer;
+      min-height: 66px;
+    }
+
+    /* ---------- 送出後的訂單卡 ---------- */
+    .bo-receipt {
+      position: relative;
+      background: var(--white);
+      border: 3px solid #fbcfe8;
+      border-radius: var(--radius-lg);
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 6px 20px var(--breakfast-shadow);
+      overflow: hidden;
+    }
+
+    .bo-receipt-emoji {
+      font-size: 56px;
+      line-height: 1;
+    }
+
+    .bo-receipt-title {
+      font-size: 28px;
+      font-weight: 900;
+    }
+
+    .bo-receipt-subtitle {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--ink-soft);
+    }
+
+    .bo-receipt-list {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .bo-receipt-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+    }
+
+    .bo-receipt-emoji-img {
+      width: 36px;
+      height: 36px;
+      flex: 0 0 36px;
+      object-fit: contain;
+    }
+
+    .bo-receipt-emoji-img.is-fallback {
+      font-size: 30px;
+      line-height: 36px;
+    }
+
+    .bo-receipt-name {
+      flex: 1;
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .bo-receipt-cat {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--ink-faint);
+    }
+
+    .bo-receipt-mascot {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--ink-soft);
+      margin-top: 6px;
+    }
+
+    .bo-actions {
+      align-self: center;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      max-width: 360px;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      top: 16px;
+      font-size: 24px;
+      pointer-events: none;
+      animation: confettiFly 0.9s ease-out forwards;
+    }
+
+    @keyframes confettiFly {
+      0% { transform: translateY(0) scale(0.5); opacity: 0; }
+      25% { opacity: 1; }
+      100% { transform: translateY(-80px) scale(1.2); opacity: 0; }
+    }
+
+    /* ---------- 點餐紀錄 ---------- */
+    .bo-history {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border-top: 2px dashed #e7e5e4;
+      padding-top: 16px;
+    }
+
+    .bo-history-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .bo-history-title {
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .bo-history-count {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--ink-faint);
+    }
+
+    .bo-history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .bo-history-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--white);
+      border: 2.5px solid #f5f5f4;
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .bo-history-text {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .bo-history-time {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--ink-soft);
+    }
+
+    .bo-history-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .bo-history-remove {
+      width: 34px;
+      height: 34px;
+      flex: 0 0 34px;
+      border: none;
+      border-radius: 10px;
+      background: #fee2e2;
+      color: #ef4444;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .bo-history-empty {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink-faint);
+      text-align: center;
+      padding: 20px 12px;
+    }
+
+    .bo-clear-all {
+      text-align: center;
+      font-size: 13px;
+      font-weight: 800;
+      color: #ef4444;
+      cursor: pointer;
+      padding: 8px;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="order-root"></div>
+  </div>
+
+  <script>
+    // 菜單：四個類別，每類最多點 1 樣、也可以不點。
+    // 台式早餐有些品項沒有專屬 emoji，用形狀最接近的替代：蛋餅 🫓、小饅頭 🍞、無糖豆漿 🫘。
+    const BREAKFAST_MENU = [
+      {
+        id: "main",
+        label: "主食",
+        emoji: "🍳",
+        accent: "main",
+        items: [
+          { id: "egg-crepe", name: "蛋餅", emoji: "🫓" },
+          { id: "sweet-potato", name: "地瓜", emoji: "🍠" },
+          { id: "cucumber", name: "小黃瓜", emoji: "🥒" },
+          { id: "banana-pancake", name: "香蕉煎餅", emoji: "🥞" },
+          { id: "mantou", name: "小饅頭", emoji: "🍞" },
+          { id: "blueberry-yogurt", name: "藍莓優格", emoji: "🫐" }
+        ]
+      },
+      {
+        id: "protein",
+        label: "蛋白質",
+        emoji: "💪",
+        accent: "protein",
+        items: [
+          { id: "boiled-egg", name: "水煮蛋", emoji: "🥚" },
+          { id: "fried-egg", name: "荷包蛋", emoji: "🍳" },
+          { id: "cheese", name: "起司", emoji: "🧀" }
+        ]
+      },
+      {
+        id: "fruit",
+        label: "水果",
+        emoji: "🍎",
+        accent: "fruit",
+        items: [
+          { id: "banana", name: "香蕉", emoji: "🍌" },
+          { id: "apple", name: "蘋果", emoji: "🍎" }
+        ]
+      },
+      {
+        id: "drink",
+        label: "飲料",
+        emoji: "🥤",
+        accent: "drink",
+        items: [
+          { id: "milk", name: "牛奶", emoji: "🥛" },
+          { id: "soy-milk", name: "無糖豆漿", emoji: "🫘" },
+          { id: "water", name: "水", emoji: "💧" }
+        ]
+      }
+    ];
+
+    // 訂單存在瀏覽器 localStorage，同一台裝置同一個瀏覽器才看得到，新的排最前面。
+    const ORDERS_KEY = "breakfast:orders";
+
+    const root = document.querySelector("#order-root");
+    const state = {
+      view: "order",   // "order" 點餐中 / "done" 送出後的訂單卡
+      selected: {},    // { 類別id: 品項id }，沒點的類別就不放 key
+      lastOrder: null,
+      orders: loadOrders()
+    };
+
+    render();
+
+    function render() {
+      root.innerHTML = state.view === "done" ? renderDone() : renderOrder();
+      bindCommon();
+      if (state.view === "done") {
+        root.querySelector("#bo-again").addEventListener("click", () => {
+          state.view = "order";
+          state.selected = {};
+          state.lastOrder = null;
+          render();
+          window.scrollTo(0, 0);
+        });
+      } else {
+        root.querySelectorAll(".bo-item").forEach((btn) => {
+          btn.addEventListener("click", () => toggleItem(btn.dataset.group, btn.dataset.item));
+        });
+        const submit = root.querySelector("#bo-submit");
+        if (!submit.disabled) submit.addEventListener("click", handleSubmit);
+      }
+    }
+
+    // 歷史紀錄的刪除／清除按鈕在兩種畫面都會出現，統一在這裡綁。
+    function bindCommon() {
+      root.querySelectorAll(".bo-history-remove").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          state.orders = state.orders.filter((o) => o.id !== btn.dataset.orderId);
+          saveOrders(state.orders);
+          render();
+        });
+      });
+
+      const clearAll = root.querySelector("#bo-clear-all");
+      if (clearAll) {
+        clearAll.addEventListener("click", () => {
+          if (!confirm("要清除全部的點餐紀錄嗎？")) return;
+          state.orders = [];
+          saveOrders(state.orders);
+          render();
+        });
+      }
+    }
+
+    function toggleItem(groupId, itemId) {
+      if (state.selected[groupId] === itemId) {
+        delete state.selected[groupId];
+      } else {
+        state.selected[groupId] = itemId;
+      }
+      playTone(state.selected[groupId] ? 620 : 380, 0.08);
+      render();
+    }
+
+    function selectedList() {
+      const list = [];
+      BREAKFAST_MENU.forEach((group) => {
+        const itemId = state.selected[group.id];
+        if (!itemId) return;
+        const item = group.items.find((i) => i.id === itemId);
+        if (item) list.push({ category: group.label, name: item.name, emoji: item.emoji });
+      });
+      return list;
+    }
+
+    function handleSubmit() {
+      const items = selectedList();
+      if (items.length === 0) return;
+      const order = { id: `${Date.now()}`, timestamp: new Date().toISOString(), items };
+      state.orders = [order, ...state.orders];
+      saveOrders(state.orders);
+      state.lastOrder = order;
+      state.view = "done";
+      render();
+      window.scrollTo(0, 0);
+      spawnConfetti(root.querySelector(".bo-receipt"));
+      playCorrectSound();
+      setTimeout(() => speakText("早餐點好囉，馬上來"), 400);
+    }
+
+    function renderOrder() {
+      const picked = selectedList();
+      return `
+        <div class="shop-head">
+          <div class="shop-sign">🥪</div>
+          <h1 class="shop-title">女兒早餐店</h1>
+          <p class="shop-subtitle">今天想吃什麼呢？</p>
+        </div>
+        <div class="info-banner">
+          <span class="info-emoji">👩‍🍳</span>
+          <span>每一類可以點一樣，也可以不點～點好按下面的「送出訂單」！</span>
+        </div>
+        <div class="order-count">🧺 已點 ${picked.length} 樣</div>
+        ${BREAKFAST_MENU.map(renderGroup).join("")}
+        <div class="bo-summary">
+          <span class="bo-summary-label">🧾 我的餐盤</span>
+          <div class="bo-summary-chips">${picked.length === 0
+            ? `<span class="bo-summary-empty">還沒點東西喔</span>`
+            : picked.map((i) => `<span class="bo-summary-chip">${renderEmoji(i.emoji, "bo-chip-emoji")}${escapeHtml(i.name)}</span>`).join("")}</div>
+        </div>
+        <button class="big-button" id="bo-submit" ${picked.length === 0 ? "disabled" : ""}>🛎️ 送出訂單</button>
+        ${renderHistory()}
+      `;
+    }
+
+    function renderGroup(group) {
+      const pickedId = state.selected[group.id];
+      const picked = pickedId && group.items.find((i) => i.id === pickedId);
+      return `
+        <div class="bo-group accent-${group.accent}">
+          <div class="bo-group-head">
+            <span class="bo-group-icon">${renderEmoji(group.emoji, "bo-group-icon-img")}</span>
+            <span class="bo-group-label">${escapeHtml(group.label)}</span>
+            <span class="bo-group-pick${picked ? " is-picked" : ""}">${picked ? `已選：${escapeHtml(picked.name)}` : "可以不選"}</span>
+          </div>
+          <div class="bo-item-grid">
+            ${group.items.map((item) => `
+              <button class="bo-item${pickedId === item.id ? " selected" : ""}" data-group="${group.id}" data-item="${item.id}">
+                ${renderEmoji(item.emoji, "bo-item-emoji")}
+                <span class="bo-item-name">${escapeHtml(item.name)}</span>
+                <span class="bo-item-check">✓</span>
+              </button>`).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDone() {
+      const order = state.lastOrder;
+      return `
+        <div class="bo-receipt">
+          <div class="bo-receipt-emoji">🛎️</div>
+          <div class="bo-receipt-title">訂單送出囉！</div>
+          <div class="bo-receipt-subtitle">${formatFullTime(order.timestamp)}</div>
+          <div class="bo-receipt-list">
+            ${order.items.map((i) => `
+              <div class="bo-receipt-row">
+                ${renderEmoji(i.emoji, "bo-receipt-emoji-img")}
+                <span class="bo-receipt-name">${escapeHtml(i.name)}</span>
+                <span class="bo-receipt-cat">${escapeHtml(i.category)}</span>
+              </div>`).join("")}
+          </div>
+          <div class="bo-receipt-mascot">🍳 早餐做好囉，快來吃！</div>
+        </div>
+        <div class="bo-actions">
+          <button class="big-button" id="bo-again">🔄 再點一次</button>
+        </div>
+        ${renderHistory()}
+      `;
+    }
+
+    function renderHistory() {
+      if (state.orders.length === 0) {
+        return `
+          <div class="bo-history">
+            <div class="bo-history-head">
+              <span class="bo-history-title">📋 點餐紀錄</span>
+            </div>
+            <div class="bo-history-empty">還沒有任何紀錄，點好餐按「送出訂單」就會存在這裡 ✨</div>
+          </div>
+        `;
+      }
+      return `
+        <div class="bo-history">
+          <div class="bo-history-head">
+            <span class="bo-history-title">📋 點餐紀錄</span>
+            <span class="bo-history-count">共 ${state.orders.length} 筆</span>
+          </div>
+          <div class="bo-history-list">
+            ${state.orders.map((o) => `
+              <div class="bo-history-row">
+                <div class="bo-history-text">
+                  <span class="bo-history-time">🕘 ${formatFullTime(o.timestamp)}</span>
+                  <span class="bo-history-items">${o.items.map((i) => `<span class="bo-history-chip">${renderEmoji(i.emoji, "bo-chip-emoji")}${escapeHtml(i.name)}</span>`).join("")}</span>
+                </div>
+                <button class="bo-history-remove" data-order-id="${o.id}" aria-label="刪除這筆紀錄">✕</button>
+              </div>`).join("")}
+          </div>
+          <div class="bo-clear-all" id="bo-clear-all">🗑️ 清除全部紀錄</div>
+        </div>
+      `;
+    }
+
+    // ---------- 小工具 ----------
+
+    // Twemoji（CC-BY 4.0 開源 emoji 圖庫）圖片，讓圖案在所有裝置/瀏覽器上長得一致，
+    // 不依賴系統字型是否收錄該 emoji；載不到才退回系統字型。
+    function twemojiUrl(emoji) {
+      const codepoints = Array.from(emoji)
+        .map((c) => c.codePointAt(0))
+        .filter((cp) => cp !== 0xfe0f)
+        .map((cp) => cp.toString(16))
+        .join("-");
+      return `https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/72x72/${codepoints}.png`;
+    }
+
+    function renderEmoji(emoji, cls) {
+      const url = twemojiUrl(emoji);
+      return `<img class="${cls}" src="${url}" alt="${escapeHtml(emoji)}" onerror="this.outerHTML='<span class=&quot;${cls} is-fallback&quot;>${emoji}</span>'">`;
+    }
+
+    function loadOrders() {
+      try {
+        return JSON.parse(localStorage.getItem(ORDERS_KEY)) || [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveOrders(orders) {
+      try {
+        localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+      } catch (e) {
+        // 無痕模式等情況下寫不進去，就讓這一輪只留在畫面上，不要整頁壞掉。
+      }
+    }
+
+    function formatFullTime(iso) {
+      const d = new Date(iso);
+      return `${pad2(d.getMonth() + 1)}/${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+    }
+
+    function pad2(n) {
+      return String(n).padStart(2, "0");
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[c]));
+    }
+
+    // 提示音用 Web Audio API 即時合成、語音用瀏覽器內建 speechSynthesis，都不需要外部音檔。
+    let audioCtx = null;
+    function playTone(freq, duration, type = "sine") {
+      try {
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        osc.connect(gain).connect(audioCtx.destination);
+        gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {
+        // 瀏覽器不給放音就安靜跳過。
+      }
+    }
+
+    function playCorrectSound() {
+      playTone(660, 0.12);
+      setTimeout(() => playTone(880, 0.18), 110);
+    }
+
+    function speakText(text) {
+      if (!("speechSynthesis" in window)) return;
+      speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "zh-TW";
+      utter.rate = 0.95;
+      speechSynthesis.speak(utter);
+    }
+
+    function spawnConfetti(container) {
+      if (!container) return;
+      const pieces = ["✨", "⭐", "🎉"];
+      for (let i = 0; i < 6; i++) {
+        const span = document.createElement("span");
+        span.className = "confetti-piece";
+        span.textContent = pieces[Math.floor(Math.random() * pieces.length)];
+        span.style.left = `${10 + Math.random() * 80}%`;
+        span.style.animationDelay = `${Math.random() * 0.2}s`;
+        container.appendChild(span);
+        setTimeout(() => span.remove(), 1200);
+      }
+    }
+  </script>
+</body>
+</html>
