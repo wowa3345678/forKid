@@ -69,6 +69,14 @@
       font-size: 64px;
       line-height: 1;
       animation: bounceSign 2.2s ease-in-out infinite;
+      cursor: pointer;
+    }
+
+    /* 長按叫出家長設定時，招牌慢慢放大當進度提示（放開就恢復）。 */
+    .shop-sign.is-holding {
+      animation: none;
+      transform: scale(1.35);
+      transition: transform 3s ease-in;
     }
 
     @keyframes bounceSign {
@@ -247,6 +255,14 @@
       font-weight: 800;
       color: var(--ink);
       text-align: center;
+    }
+
+    .bo-item-special {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      font-size: 15px;
+      line-height: 1;
     }
 
     .bo-item-price {
@@ -626,6 +642,261 @@
       padding: 8px;
       text-decoration: underline;
     }
+
+    /* ---------- 家長設定面板 ---------- */
+    /* 這一區是給大人看的，字比較小、密度比較高，跟給小孩的點餐畫面刻意做出區別。 */
+    #parent-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(41, 37, 36, 0.45);
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px 16px;
+      overflow-y: auto;
+      z-index: 50;
+    }
+
+    .parent-panel {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 520px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+    }
+
+    .parent-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .parent-title {
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .parent-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 10px;
+      background: #f5f5f4;
+      color: var(--ink-soft);
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .parent-subtitle {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.6;
+      color: var(--ink-soft);
+    }
+
+    .parent-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .parent-section-title {
+      font-size: 14px;
+      font-weight: 900;
+      color: var(--ink);
+    }
+
+    .parent-chosen {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 34px;
+      align-items: center;
+    }
+
+    .parent-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ecfdf5;
+      border: 2px solid #6ee7b7;
+      border-radius: 999px;
+      padding: 5px 8px 5px 12px;
+      font-size: 14px;
+      font-weight: 800;
+      color: #065f46;
+    }
+
+    .parent-chip-remove {
+      width: 22px;
+      height: 22px;
+      border: none;
+      border-radius: 50%;
+      background: #d1fae5;
+      color: #047857;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .parent-empty {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-faint);
+    }
+
+    .parent-reuse {
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      background: #f8fafc;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--ink-soft);
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .parent-preset-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
+      gap: 8px;
+    }
+
+    .parent-preset {
+      border: 2px solid #f5f5f4;
+      border-radius: 12px;
+      background: var(--bg);
+      padding: 10px 4px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    .parent-preset.selected {
+      border-color: #22c55e;
+      background: #dcfce7;
+    }
+
+    .parent-preset-emoji {
+      width: 30px;
+      height: 30px;
+      object-fit: contain;
+    }
+
+    .parent-preset-emoji.is-fallback {
+      font-size: 26px;
+      line-height: 30px;
+    }
+
+    .parent-preset-name {
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .parent-preset-price {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--ink-faint);
+    }
+
+    .parent-emoji-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .parent-emoji {
+      width: 40px;
+      height: 40px;
+      border: 2px solid #f5f5f4;
+      border-radius: 10px;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .parent-emoji.selected {
+      border-color: #22c55e;
+      background: #dcfce7;
+    }
+
+    .parent-emoji-img {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+    }
+
+    .parent-emoji-img.is-fallback {
+      font-size: 20px;
+      line-height: 24px;
+    }
+
+    .parent-custom-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .parent-input {
+      flex: 1;
+      min-width: 120px;
+      border: 2px solid #e7e5e4;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink);
+      background: var(--white);
+      user-select: text;
+    }
+
+    .parent-input:focus {
+      outline: none;
+      border-color: #fb7185;
+    }
+
+    .parent-input-price {
+      flex: 0 0 84px;
+      min-width: 0;
+      text-align: right;
+    }
+
+    .parent-unit {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--ink-soft);
+    }
+
+    .parent-add {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 18px;
+      background: var(--breakfast-grad);
+      color: var(--white);
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .parent-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
   </style>
 </head>
 <body>
@@ -685,15 +956,20 @@
         ]
       },
       {
+        // 香蕉跟蘋果家裡幾乎每天都有，所以固定常駐；其他水果不一定有，
+        // 硬推薦會害小孩點到家裡沒有的東西，所以改由家長在「家長設定」裡挑今天真的有的，
+        // 沒設定的日子這一區就只有香蕉、蘋果，寧可少也不要給不存在的選項。
         id: "fruit",
         label: "水果",
         emoji: "🍎",
         accent: "fruit",
-        daily: 3,
-        note: "水果每天換一批，今天有這 3 種！",
+        acceptsDaily: true,
         items: [
           { id: "banana", name: "香蕉", emoji: "🍌", price: 15 },
-          { id: "apple", name: "蘋果", emoji: "🍎", price: 20 },
+          { id: "apple", name: "蘋果", emoji: "🍎", price: 20 }
+        ],
+        // 家長設定面板裡「從清單挑」的選項，不會直接出現在點餐畫面上。
+        extraItems: [
           { id: "strawberry", name: "草莓", emoji: "🍓", price: 30 },
           { id: "grape", name: "葡萄", emoji: "🍇", price: 25 },
           { id: "orange", name: "橘子", emoji: "🍊", price: 15 },
@@ -702,7 +978,9 @@
           { id: "pineapple", name: "鳳梨", emoji: "🍍", price: 25 },
           { id: "mango", name: "芒果", emoji: "🥭", price: 30 },
           { id: "pear", name: "水梨", emoji: "🍐", price: 25 },
-          { id: "tomato", name: "小番茄", emoji: "🍅", price: 15 }
+          { id: "tomato", name: "小番茄", emoji: "🍅", price: 15 },
+          { id: "guava", name: "芭樂", emoji: "🍈", price: 20 },
+          { id: "waxapple", name: "蓮霧", emoji: "🍎", price: 25 }
         ]
       },
       {
@@ -718,32 +996,58 @@
       }
     ];
 
-    // 今日特選：用「年月日」當亂數種子挑，所以同一天不管重新整理幾次都是同一組，隔天自動換一批。
-    // 開店時算一次存進 group.todayItems，之後每次 render 都直接用，不要每次重算。
-    function pickDailyItems(group) {
-      if (!group.daily || group.items.length <= group.daily) return group.items;
-      const now = new Date();
-      let seed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
-      const pool = [...group.items];
-      const picked = [];
-      while (picked.length < group.daily) {
-        seed = (seed * 1103515245 + 12345) % 2147483648;
-        picked.push(pool.splice(seed % pool.length, 1)[0]);
-      }
-      return picked;
+    // 家長自己輸入水果時可以挑的圖示。只允許這一排裡的 emoji（renderEmoji 會把字串塞進 onerror 屬性裡，
+    // 讓使用者輸入的內容跑進去會有注入風險），輸入的名稱則一律走 escapeHtml。
+    const FRUIT_EMOJI_PALETTE = ["🍈", "🍓", "🍇", "🍊", "🍉", "🥝", "🍍", "🥭", "🍐", "🍅", "🍑", "🍒", "🥥", "🫐", "🍌", "🍎"];
+
+    // 今日特選存在 localStorage，而且綁「哪一天設定的」。
+    // 隔天就自動失效（水果區回到只有香蕉、蘋果），因為昨天有的水果今天不一定還有；
+    // 家長設定面板裡會保留上次的內容，按「沿用」一鍵帶回來，不用整組重挑。
+    const DAILY_KEY = "breakfast:daily-fruits";
+
+    function todayKey() {
+      const d = new Date();
+      return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
     }
 
-    BREAKFAST_MENU.forEach((group) => { group.todayItems = pickDailyItems(group); });
+    function loadDailySpecials() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(DAILY_KEY));
+        if (!saved || !Array.isArray(saved.items)) return { date: null, items: [] };
+        return { date: saved.date || null, items: saved.items };
+      } catch (e) {
+        return { date: null, items: [] };
+      }
+    }
+
+    function saveDailySpecials(items) {
+      try {
+        localStorage.setItem(DAILY_KEY, JSON.stringify({ date: todayKey(), items }));
+      } catch (e) {
+        // 無痕模式等寫不進去的情況，就讓設定只在這一輪有效。
+      }
+    }
+
+    // 點餐畫面上這一類實際會出現的品項 = 固定常駐 + 今天的特選。
+    function groupItems(group) {
+      if (!group.acceptsDaily) return group.items;
+      return group.items.concat(state.dailySpecials.map((item) => ({ ...item, special: true })));
+    }
 
     // 訂單存在瀏覽器 localStorage，同一台裝置同一個瀏覽器才看得到，新的排最前面。
     const ORDERS_KEY = "breakfast:orders";
 
     const root = document.querySelector("#order-root");
+    const savedDaily = loadDailySpecials();
     const state = {
       view: "order",   // "order" 點餐中 / "done" 送出後的訂單卡
       selected: {},    // { 類別id: 品項id }，沒點的類別就不放 key
       lastOrder: null,
-      orders: loadOrders()
+      orders: loadOrders(),
+      // 只有「今天」設定的才算數，昨天的設定不會出現在點餐畫面上。
+      dailySpecials: savedDaily.date === todayKey() ? savedDaily.items : [],
+      lastDaily: savedDaily,          // 給家長面板的「沿用上次」用
+      parentDraft: null               // 家長面板開著時的暫存清單
     };
 
     render();
@@ -751,6 +1055,7 @@
     function render() {
       root.innerHTML = state.view === "done" ? renderDone() : renderOrder();
       bindCommon();
+      bindParentGate();
       if (state.view === "done") {
         root.querySelector("#bo-again").addEventListener("click", () => {
           state.view = "order";
@@ -804,7 +1109,7 @@
       BREAKFAST_MENU.forEach((group) => {
         const itemId = state.selected[group.id];
         if (!itemId) return;
-        const item = group.items.find((i) => i.id === itemId);
+        const item = groupItems(group).find((i) => i.id === itemId);
         if (item) list.push({ category: group.label, name: item.name, emoji: item.emoji, icon: item.icon, price: item.price });
       });
       return list;
@@ -859,19 +1164,25 @@
     }
 
     function renderGroup(group) {
+      const items = groupItems(group);
       const pickedId = state.selected[group.id];
-      const picked = pickedId && group.items.find((i) => i.id === pickedId);
+      const picked = pickedId && items.find((i) => i.id === pickedId);
+      const hasSpecials = group.acceptsDaily && state.dailySpecials.length > 0;
+      const note = group.acceptsDaily
+        ? (hasSpecials ? "香蕉、蘋果每天都有，今天還多了特選水果喔！" : "香蕉、蘋果每天都有～")
+        : group.note;
       return `
         <div class="bo-group accent-${group.accent}">
           <div class="bo-group-head">
             <span class="bo-group-icon">${renderEmoji(group.emoji, "bo-group-icon-img")}</span>
-            <span class="bo-group-label">${escapeHtml(group.label)}${group.daily ? `<span class="bo-daily-tag">✨ 今日特選</span>` : ""}</span>
+            <span class="bo-group-label">${escapeHtml(group.label)}${hasSpecials ? `<span class="bo-daily-tag">✨ 今日特選</span>` : ""}</span>
             <span class="bo-group-pick${picked ? " is-picked" : ""}">${picked ? `已選：${escapeHtml(picked.name)}` : "可以不選"}</span>
           </div>
-          ${group.note ? `<div class="bo-group-note">${escapeHtml(group.note)}</div>` : ""}
+          ${note ? `<div class="bo-group-note">${escapeHtml(note)}</div>` : ""}
           <div class="bo-item-grid">
-            ${group.todayItems.map((item) => `
-              <button class="bo-item${pickedId === item.id ? " selected" : ""}" data-group="${group.id}" data-item="${item.id}">
+            ${items.map((item) => `
+              <button class="bo-item${pickedId === item.id ? " selected" : ""}" data-group="${group.id}" data-item="${escapeHtml(item.id)}">
+                ${item.special ? `<span class="bo-item-special">✨</span>` : ""}
                 ${renderItemIcon(item, "bo-item-emoji")}
                 <span class="bo-item-name">${escapeHtml(item.name)}</span>
                 <span class="bo-item-price">${item.price} 元</span>
@@ -943,6 +1254,172 @@
           <div class="bo-clear-all" id="bo-clear-all">🗑️ 清除全部紀錄</div>
         </div>
       `;
+    }
+
+    // ---------- 家長設定 ----------
+
+    // 入口刻意藏起來：長按店招 🥪 三秒才會打開，畫面上完全沒有提示，小孩不會誤觸。
+    // 按住的時候招牌會慢慢放大當進度提示，放開就取消。
+    const PARENT_HOLD_MS = 3000;
+    let holdTimer = null;
+
+    function bindParentGate() {
+      const sign = root.querySelector(".shop-sign");
+      if (!sign) return;
+
+      const start = (e) => {
+        if (e.pointerType === "mouse" && e.button !== 0) return;
+        sign.classList.add("is-holding");
+        holdTimer = setTimeout(() => {
+          sign.classList.remove("is-holding");
+          playTone(880, 0.12);
+          openParentPanel();
+        }, PARENT_HOLD_MS);
+      };
+      const cancel = () => {
+        clearTimeout(holdTimer);
+        sign.classList.remove("is-holding");
+      };
+
+      sign.addEventListener("pointerdown", start);
+      ["pointerup", "pointerleave", "pointercancel"].forEach((evt) => sign.addEventListener(evt, cancel));
+      // 長按在手機上會跳出系統選單，擋掉才不會蓋住我們的面板。
+      sign.addEventListener("contextmenu", (e) => e.preventDefault());
+    }
+
+    function openParentPanel() {
+      state.parentDraft = state.dailySpecials.map((i) => ({ ...i }));
+      renderParentPanel();
+    }
+
+    function closeParentPanel() {
+      state.parentDraft = null;
+      const overlay = document.querySelector("#parent-overlay");
+      if (overlay) overlay.remove();
+    }
+
+    function renderParentPanel() {
+      let overlay = document.querySelector("#parent-overlay");
+      if (!overlay) {
+        overlay = document.createElement("div");
+        overlay.id = "parent-overlay";
+        document.body.appendChild(overlay);
+      }
+
+      const draft = state.parentDraft;
+      const fruitGroup = BREAKFAST_MENU.find((g) => g.id === "fruit");
+      const stale = state.lastDaily.date && state.lastDaily.date !== todayKey() && state.lastDaily.items.length > 0;
+
+      overlay.innerHTML = `
+        <div class="parent-panel">
+          <div class="parent-head">
+            <span class="parent-title">🔧 家長設定</span>
+            <button class="parent-close" id="parent-close" aria-label="關閉">✕</button>
+          </div>
+          <p class="parent-subtitle">設定今天的「今日特選」水果。香蕉、蘋果是固定的，不用設定。<br>設定只算今天，明天會自動清空，避免推薦到家裡沒有的水果。</p>
+
+          <div class="parent-section">
+            <span class="parent-section-title">今天已選 ${draft.length} 種</span>
+            <div class="parent-chosen">${draft.length === 0
+              ? `<span class="parent-empty">還沒設定 — 小孩現在只會看到香蕉、蘋果</span>`
+              : draft.map((i) => `<span class="parent-chip">${renderEmoji(i.emoji, "bo-chip-emoji")}${escapeHtml(i.name)}<span class="bo-chip-price">${i.price} 元</span><button class="parent-chip-remove" data-remove="${escapeHtml(i.id)}" aria-label="移除">✕</button></span>`).join("")}</div>
+            ${stale ? `<button class="parent-reuse" id="parent-reuse">↩️ 沿用 ${escapeHtml(state.lastDaily.date.slice(5).replace("-", "/"))} 的設定（${state.lastDaily.items.map((i) => escapeHtml(i.name)).join("、")}）</button>` : ""}
+          </div>
+
+          <div class="parent-section">
+            <span class="parent-section-title">從清單挑</span>
+            <div class="parent-preset-grid">
+              ${fruitGroup.extraItems.map((item) => `
+                <button class="parent-preset${draft.some((d) => d.id === item.id) ? " selected" : ""}" data-preset="${item.id}">
+                  ${renderEmoji(item.emoji, "parent-preset-emoji")}
+                  <span class="parent-preset-name">${escapeHtml(item.name)}</span>
+                  <span class="parent-preset-price">${item.price} 元</span>
+                </button>`).join("")}
+            </div>
+          </div>
+
+          <div class="parent-section">
+            <span class="parent-section-title">自己輸入</span>
+            <div class="parent-emoji-row">
+              ${FRUIT_EMOJI_PALETTE.map((e, idx) => `<button class="parent-emoji${idx === 0 ? " selected" : ""}" data-emoji="${e}">${renderEmoji(e, "parent-emoji-img")}</button>`).join("")}
+            </div>
+            <div class="parent-custom-row">
+              <input class="parent-input" id="parent-name" type="text" placeholder="水果名稱，例如 芭樂" maxlength="8" />
+              <input class="parent-input parent-input-price" id="parent-price" type="number" value="20" min="0" max="200" step="5" />
+              <span class="parent-unit">元</span>
+              <button class="parent-add" id="parent-add">加入</button>
+            </div>
+          </div>
+
+          <div class="parent-actions">
+            <button class="big-button" id="parent-save">✅ 完成設定</button>
+            <button class="ghost-button" id="parent-clear">🗑️ 全部清空</button>
+          </div>
+        </div>
+      `;
+
+      overlay.querySelector("#parent-close").addEventListener("click", closeParentPanel);
+      overlay.addEventListener("click", (e) => { if (e.target === overlay) closeParentPanel(); });
+
+      overlay.querySelectorAll("[data-preset]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const item = fruitGroup.extraItems.find((i) => i.id === btn.dataset.preset);
+          const at = draft.findIndex((d) => d.id === item.id);
+          if (at >= 0) draft.splice(at, 1); else draft.push({ ...item });
+          renderParentPanel();
+        });
+      });
+
+      overlay.querySelectorAll("[data-remove]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const at = draft.findIndex((d) => d.id === btn.dataset.remove);
+          if (at >= 0) draft.splice(at, 1);
+          renderParentPanel();
+        });
+      });
+
+      overlay.querySelectorAll("[data-emoji]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          overlay.querySelectorAll("[data-emoji]").forEach((b) => b.classList.remove("selected"));
+          btn.classList.add("selected");
+        });
+      });
+
+      overlay.querySelector("#parent-add").addEventListener("click", () => {
+        const nameInput = overlay.querySelector("#parent-name");
+        const name = nameInput.value.trim();
+        if (!name) { nameInput.focus(); return; }
+        const priceRaw = Number(overlay.querySelector("#parent-price").value);
+        const price = Number.isFinite(priceRaw) && priceRaw >= 0 ? Math.round(priceRaw) : 20;
+        const chosen = overlay.querySelector("[data-emoji].selected");
+        // 只收 palette 裡的 emoji，避免自由輸入的字串跑進 renderEmoji 的 onerror 屬性。
+        const emoji = chosen && FRUIT_EMOJI_PALETTE.includes(chosen.dataset.emoji) ? chosen.dataset.emoji : FRUIT_EMOJI_PALETTE[0];
+        draft.push({ id: `custom-${Date.now()}`, name, emoji, price });
+        renderParentPanel();
+      });
+
+      if (stale) {
+        overlay.querySelector("#parent-reuse").addEventListener("click", () => {
+          state.parentDraft = state.lastDaily.items.map((i) => ({ ...i }));
+          renderParentPanel();
+        });
+      }
+
+      overlay.querySelector("#parent-clear").addEventListener("click", () => {
+        state.parentDraft = [];
+        renderParentPanel();
+      });
+
+      overlay.querySelector("#parent-save").addEventListener("click", () => {
+        state.dailySpecials = draft.map((i) => ({ ...i }));
+        saveDailySpecials(state.dailySpecials);
+        state.lastDaily = { date: todayKey(), items: state.dailySpecials };
+        // 特選被拿掉時，小孩原本選的那一樣要一起清掉，否則會送出畫面上已經看不到的品項。
+        const fruitPicked = state.selected.fruit;
+        if (fruitPicked && !groupItems(fruitGroup).some((i) => i.id === fruitPicked)) delete state.selected.fruit;
+        closeParentPanel();
+        render();
+      });
     }
 
     // ---------- 小工具 ----------
