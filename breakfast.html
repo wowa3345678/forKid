@@ -550,8 +550,28 @@
   </div>
 
   <script>
+    // 自畫的 SVG 圖示：Unicode 根本沒有「饅頭」這個 emoji（🍞 是吐司、🥟 是水餃），
+    // 硬借別的 emoji 小孩會看錯，所以直接畫一顆蒸籠上的白饅頭。
+    // 畫法對齊 Twemoji 的風格：36x36 網格、純色平面、不描邊，這樣跟旁邊的 emoji 圖擺在一起才不會突兀。
+    const CUSTOM_ICONS = {
+      mantou: `
+        <svg class="{{cls}}" viewBox="0 0 36 36" role="img" aria-label="饅頭">
+          <g stroke="#CFC8BC" stroke-width="1.8" stroke-linecap="round" fill="none" opacity=".75">
+            <path d="M12.5 9.4c-2.2-2 2.2-3.4 0-5.4" />
+            <path d="M18 8.2c-2.2-2 2.2-3.4 0-5.4" />
+            <path d="M23.5 9.4c-2.2-2 2.2-3.4 0-5.4" />
+          </g>
+          <path d="M6 24.5c0-7.2 5.4-12.5 12-12.5s12 5.3 12 12.5z" fill="#FAF4E8" />
+          <path d="M10.8 21.2c.5-3.6 3-6.2 6.2-6.8-4.2-.4-7.5 2.7-7.9 6.8z" fill="#FFFFFF" opacity=".85" />
+          <path d="M6 24.5h24v1.6H6z" fill="#EFE3CE" />
+          <rect x="3.6" y="26.1" width="28.8" height="6.3" rx="2.2" fill="#E0A96D" />
+          <rect x="3.6" y="28.4" width="28.8" height="1.7" fill="#C68F52" opacity=".5" />
+        </svg>`
+    };
+
     // 菜單：四個類別，每類最多點 1 樣、也可以不點。
-    // 台式早餐有些品項沒有專屬 emoji，用形狀最接近的替代：蛋餅 🫓、小饅頭 🍞、無糖豆漿 🫘。
+    // 台式早餐有些品項沒有專屬 emoji：蛋餅用 🫓（薄餅）、無糖豆漿用 🫘（豆子）形狀最接近；
+    // 小饅頭沒有堪用的替代品，改用上面 CUSTOM_ICONS 的自畫圖示（emoji 欄位保留 🍞 當載不到時的最後退路）。
     const BREAKFAST_MENU = [
       {
         id: "main",
@@ -563,7 +583,7 @@
           { id: "sweet-potato", name: "地瓜", emoji: "🍠" },
           { id: "cucumber", name: "小黃瓜", emoji: "🥒" },
           { id: "banana-pancake", name: "香蕉煎餅", emoji: "🥞" },
-          { id: "mantou", name: "小饅頭", emoji: "🍞" },
+          { id: "mantou", name: "小饅頭", emoji: "🍞", icon: "mantou" },
           { id: "blueberry-yogurt", name: "藍莓優格", emoji: "🫐" }
         ]
       },
@@ -671,7 +691,7 @@
         const itemId = state.selected[group.id];
         if (!itemId) return;
         const item = group.items.find((i) => i.id === itemId);
-        if (item) list.push({ category: group.label, name: item.name, emoji: item.emoji });
+        if (item) list.push({ category: group.label, name: item.name, emoji: item.emoji, icon: item.icon });
       });
       return list;
     }
@@ -709,7 +729,7 @@
           <span class="bo-summary-label">🧾 我的餐盤</span>
           <div class="bo-summary-chips">${picked.length === 0
             ? `<span class="bo-summary-empty">還沒點東西喔</span>`
-            : picked.map((i) => `<span class="bo-summary-chip">${renderEmoji(i.emoji, "bo-chip-emoji")}${escapeHtml(i.name)}</span>`).join("")}</div>
+            : picked.map((i) => `<span class="bo-summary-chip">${renderItemIcon(i, "bo-chip-emoji")}${escapeHtml(i.name)}</span>`).join("")}</div>
         </div>
         <button class="big-button" id="bo-submit" ${picked.length === 0 ? "disabled" : ""}>🛎️ 送出訂單</button>
         ${renderHistory()}
@@ -729,7 +749,7 @@
           <div class="bo-item-grid">
             ${group.items.map((item) => `
               <button class="bo-item${pickedId === item.id ? " selected" : ""}" data-group="${group.id}" data-item="${item.id}">
-                ${renderEmoji(item.emoji, "bo-item-emoji")}
+                ${renderItemIcon(item, "bo-item-emoji")}
                 <span class="bo-item-name">${escapeHtml(item.name)}</span>
                 <span class="bo-item-check">✓</span>
               </button>`).join("")}
@@ -748,7 +768,7 @@
           <div class="bo-receipt-list">
             ${order.items.map((i) => `
               <div class="bo-receipt-row">
-                ${renderEmoji(i.emoji, "bo-receipt-emoji-img")}
+                ${renderItemIcon(i, "bo-receipt-emoji-img")}
                 <span class="bo-receipt-name">${escapeHtml(i.name)}</span>
                 <span class="bo-receipt-cat">${escapeHtml(i.category)}</span>
               </div>`).join("")}
@@ -784,7 +804,7 @@
               <div class="bo-history-row">
                 <div class="bo-history-text">
                   <span class="bo-history-time">🕘 ${formatFullTime(o.timestamp)}</span>
-                  <span class="bo-history-items">${o.items.map((i) => `<span class="bo-history-chip">${renderEmoji(i.emoji, "bo-chip-emoji")}${escapeHtml(i.name)}</span>`).join("")}</span>
+                  <span class="bo-history-items">${o.items.map((i) => `<span class="bo-history-chip">${renderItemIcon(i, "bo-chip-emoji")}${escapeHtml(i.name)}</span>`).join("")}</span>
                 </div>
                 <button class="bo-history-remove" data-order-id="${o.id}" aria-label="刪除這筆紀錄">✕</button>
               </div>`).join("")}
@@ -810,6 +830,13 @@
     function renderEmoji(emoji, cls) {
       const url = twemojiUrl(emoji);
       return `<img class="${cls}" src="${url}" alt="${escapeHtml(emoji)}" onerror="this.outerHTML='<span class=&quot;${cls} is-fallback&quot;>${emoji}</span>'">`;
+    }
+
+    // 品項圖示：有自畫的 SVG 就用自畫的，沒有才回去用 Twemoji 圖。
+    // 舊的訂單紀錄可能沒有 icon 欄位，這時就沿用當初存下來的 emoji，不會壞掉。
+    function renderItemIcon(item, cls) {
+      const custom = item.icon && CUSTOM_ICONS[item.icon];
+      return custom ? custom.replace("{{cls}}", cls) : renderEmoji(item.emoji, cls);
     }
 
     function loadOrders() {
