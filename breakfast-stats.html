@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>女兒早餐店 — 統計</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    /* 跟 breakfast.html 一樣是自足的單檔頁面，共用同一套設計語彙。
+       兩支檔案放在同一個網域下，所以讀得到同一份 localStorage（breakfast:orders）。 */
+    :root {
+      --bg: #fff9f0;
+      --ink: #292524;
+      --ink-soft: #78716c;
+      --ink-faint: #a8a29e;
+      --white: #ffffff;
+      --radius-lg: 28px;
+      --radius-md: 22px;
+      --radius-sm: 16px;
+      --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.06);
+      --breakfast-grad: linear-gradient(145deg, #f472b6, #fb7185);
+      --breakfast-shadow: rgba(244, 114, 182, 0.35);
+      --cat-main: #fbbf24;
+      --cat-protein: #fb7185;
+      --cat-fruit: #a3e635;
+      --cat-drink: #4dd0e1;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Nunito", "Arial Rounded MT Bold", Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button { font-family: inherit; }
+
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 48px;
+    }
+
+    #stats-root {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .stats-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back-link {
+      background: var(--white);
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 10px 18px;
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--ink-soft);
+      text-decoration: none;
+      box-shadow: var(--shadow-sm);
+      white-space: nowrap;
+    }
+
+    .stats-title {
+      flex: 1;
+      font-size: clamp(24px, 5vw, 32px);
+      font-weight: 900;
+      margin: 0;
+      text-align: center;
+    }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+    }
+
+    .kpi {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .kpi-label {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--ink-soft);
+    }
+
+    .kpi-value {
+      font-size: 30px;
+      font-weight: 900;
+      color: #c2410c;
+    }
+
+    .kpi-value small {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--ink-soft);
+      margin-left: 3px;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .card-title {
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .card-note {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      margin: -8px 0 0;
+    }
+
+    /* ---------- 圓餅圖（四大類，只有 4 塊所以圓餅看得清楚） ---------- */
+    .pie-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .pie {
+      width: 190px;
+      height: 190px;
+      flex: 0 0 190px;
+      transform: rotate(-90deg);
+    }
+
+    .pie circle {
+      fill: none;
+      stroke-width: 26;
+    }
+
+    .pie-center {
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .legend {
+      flex: 1;
+      min-width: 190px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .legend-dot {
+      width: 16px;
+      height: 16px;
+      flex: 0 0 16px;
+      border-radius: 5px;
+    }
+
+    .legend-name { flex: 1; }
+
+    .legend-value {
+      color: var(--ink-soft);
+      font-size: 14px;
+    }
+
+    /* ---------- 橫條排行榜（品項多，用長條才讀得出來） ---------- */
+    .bars {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .bar-emoji {
+      width: 26px;
+      height: 26px;
+      flex: 0 0 26px;
+      object-fit: contain;
+    }
+
+    .bar-emoji.is-fallback {
+      font-size: 22px;
+      line-height: 26px;
+    }
+
+    .bar-name {
+      flex: 0 0 84px;
+      font-size: 15px;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bar-track {
+      flex: 1;
+      height: 26px;
+      background: #f5f5f4;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      min-width: 4px;
+      transition: width 0.4s ease;
+    }
+
+    .bar-fill.cat-main { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .bar-fill.cat-protein { background: linear-gradient(90deg, #f43f5e, #fb7185); }
+    .bar-fill.cat-fruit { background: linear-gradient(90deg, #65a30d, #a3e635); }
+    .bar-fill.cat-drink { background: linear-gradient(90deg, #26c6da, #4dd0e1); }
+
+    .bar-count {
+      flex: 0 0 56px;
+      text-align: right;
+      font-size: 15px;
+      font-weight: 900;
+      color: #c2410c;
+    }
+
+    /* ---------- 匯出／匯入 ---------- */
+    .io-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .io-button {
+      flex: 1;
+      min-width: 150px;
+      border: none;
+      border-radius: 16px;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--white);
+      background: var(--breakfast-grad);
+      box-shadow: 0 6px 20px var(--breakfast-shadow);
+      cursor: pointer;
+      min-height: 60px;
+    }
+
+    .io-button.secondary {
+      background: var(--white);
+      color: var(--ink-soft);
+      border: 2px solid #e7e5e4;
+      box-shadow: none;
+    }
+
+    .io-textarea {
+      width: 100%;
+      min-height: 120px;
+      border: 2px solid #e7e5e4;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--ink);
+      background: #fafaf9;
+      resize: vertical;
+    }
+
+    .io-textarea:focus {
+      outline: none;
+      border-color: #fb7185;
+    }
+
+    .io-status {
+      font-size: 14px;
+      font-weight: 800;
+      padding: 12px 14px;
+      border-radius: 14px;
+    }
+
+    .io-status.ok { background: #dcfce7; color: #166534; }
+    .io-status.warn { background: #fef9c3; color: #854d0e; }
+    .io-status.err { background: #fee2e2; color: #991b1b; }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 48px 24px;
+      text-align: center;
+    }
+
+    .empty-emoji { font-size: 64px; }
+
+    .empty-title {
+      font-size: 22px;
+      font-weight: 900;
+      margin: 0;
+    }
+
+    .empty-subtitle {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="stats-root"></div>
+  </div>
+
+  <script>
+    // 跟 breakfast.html 共用同一個 localStorage key，所以這一頁不用自己記任何東西。
+    const ORDERS_KEY = "breakfast:orders";
+
+    // 類別的顯示順序與配色，跟點餐頁一致。
+    const CATEGORIES = [
+      { id: "main", label: "主食", color: "#fbbf24", cls: "cat-main" },
+      { id: "protein", label: "蛋白質", color: "#fb7185", cls: "cat-protein" },
+      { id: "fruit", label: "水果", color: "#a3e635", cls: "cat-fruit" },
+      { id: "drink", label: "飲料", color: "#4dd0e1", cls: "cat-drink" }
+    ];
+
+    const root = document.querySelector("#stats-root");
+    const state = { orders: loadOrders(), status: null };
+
+    render();
+
+    function render() {
+      const orders = state.orders;
+      root.innerHTML = `
+        <div class="stats-head">
+          <a class="back-link" href="breakfast.html">◀ 回早餐店</a>
+          <h1 class="stats-title">📊 吃了什麼</h1>
+        </div>
+        ${state.status ? `<div class="io-status ${state.status.kind}">${escapeHtml(state.status.text)}</div>` : ""}
+        ${orders.length === 0 ? renderEmpty() : renderStats(orders)}
+        ${renderIO()}
+      `;
+      bindIO();
+    }
+
+    function renderEmpty() {
+      return `
+        <div class="card">
+          <div class="empty-state">
+            <div class="empty-emoji">🍽️</div>
+            <p class="empty-title">還沒有點餐紀錄</p>
+            <p class="empty-subtitle">回早餐店點幾次早餐，這裡就會出現統計囉！<br>也可以用下面的「匯入紀錄」把別台裝置的紀錄帶進來。</p>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderStats(orders) {
+      const items = orders.flatMap((o) => o.items || []);
+      const totalMoney = items.reduce((sum, i) => sum + (typeof i.price === "number" ? i.price : 0), 0);
+      const days = new Set(orders.map((o) => (o.timestamp || "").slice(0, 10)).filter(Boolean)).size;
+
+      // 依類別加總（統計的是「點過幾次」，不是幾種）
+      const byCategory = CATEGORIES.map((cat) => ({
+        ...cat,
+        count: items.filter((i) => (i.categoryId || "") === cat.id || i.category === cat.label).length
+      }));
+      const categoryTotal = byCategory.reduce((sum, c) => sum + c.count, 0);
+
+      // 依品項加總，次數多的排前面
+      const byItem = {};
+      items.forEach((i) => {
+        const key = i.name;
+        if (!byItem[key]) byItem[key] = { name: i.name, emoji: i.emoji, icon: i.icon, count: 0, money: 0, category: i.categoryId || categoryIdOf(i.category) };
+        byItem[key].count += 1;
+        byItem[key].money += typeof i.price === "number" ? i.price : 0;
+      });
+      const ranked = Object.values(byItem).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+      const maxCount = ranked.length ? ranked[0].count : 1;
+
+      return `
+        <div class="kpi-row">
+          <div class="kpi"><span class="kpi-label">總共點餐</span><span class="kpi-value">${orders.length}<small>次</small></span></div>
+          <div class="kpi"><span class="kpi-label">吃掉的餐點</span><span class="kpi-value">${items.length}<small>樣</small></span></div>
+          <div class="kpi"><span class="kpi-label">吃了幾天</span><span class="kpi-value">${days}<small>天</small></span></div>
+          <div class="kpi"><span class="kpi-label">總金額</span><span class="kpi-value">${totalMoney}<small>元</small></span></div>
+        </div>
+
+        <div class="card">
+          <span class="card-title">🥗 四大類吃得均衡嗎？</span>
+          <p class="card-note">每一類各佔全部餐點的比例</p>
+          <div class="pie-row">
+            ${renderPie(byCategory, categoryTotal)}
+            <div class="legend">
+              ${byCategory.map((c) => `
+                <div class="legend-row">
+                  <span class="legend-dot" style="background:${c.color}"></span>
+                  <span class="legend-name">${escapeHtml(c.label)}</span>
+                  <span class="legend-value">${c.count} 樣 · ${categoryTotal ? Math.round((c.count / categoryTotal) * 100) : 0}%</span>
+                </div>`).join("")}
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <span class="card-title">🏆 最常點的餐點</span>
+          <p class="card-note">共 ${ranked.length} 種餐點，由多到少排列</p>
+          <div class="bars">
+            ${ranked.map((item) => `
+              <div class="bar-row">
+                ${renderEmoji(item.emoji, "bar-emoji")}
+                <span class="bar-name">${escapeHtml(item.name)}</span>
+                <div class="bar-track"><div class="bar-fill ${categoryClass(item.category)}" style="width:${Math.round((item.count / maxCount) * 100)}%"></div></div>
+                <span class="bar-count">${item.count} 次</span>
+              </div>`).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    // 圓餅圖用 SVG 的 stroke-dasharray 畫：每一段的長度 = 佔比 × 圓周，
+    // 再用 stroke-dashoffset 把它推到正確的起點。不需要任何圖表函式庫。
+    function renderPie(byCategory, total) {
+      const radius = 62;
+      const circumference = 2 * Math.PI * radius;
+      let offset = 0;
+      const segments = byCategory.filter((c) => c.count > 0).map((c) => {
+        const portion = total ? c.count / total : 0;
+        const seg = `<circle cx="95" cy="95" r="${radius}" stroke="${c.color}"
+          stroke-dasharray="${(portion * circumference).toFixed(2)} ${circumference.toFixed(2)}"
+          stroke-dashoffset="${(-offset * circumference).toFixed(2)}"></circle>`;
+        offset += portion;
+        return seg;
+      }).join("");
+
+      return `
+        <svg class="pie" viewBox="0 0 190 190" role="img" aria-label="四大類比例圓餅圖">
+          <circle cx="95" cy="95" r="${radius}" stroke="#f5f5f4"></circle>
+          ${segments}
+        </svg>
+      `;
+    }
+
+    function categoryIdOf(label) {
+      const found = CATEGORIES.find((c) => c.label === label);
+      return found ? found.id : "";
+    }
+
+    function categoryClass(categoryId) {
+      const found = CATEGORIES.find((c) => c.id === categoryId);
+      return found ? found.cls : "cat-main";
+    }
+
+    // ---------- 匯出／匯入 ----------
+
+    function renderIO() {
+      return `
+        <div class="card">
+          <span class="card-title">💾 備份與搬家</span>
+          <p class="card-note">紀錄存在這台裝置的瀏覽器裡，換裝置或清除瀏覽資料就會不見。想留著就先匯出一份。</p>
+          <div class="io-buttons">
+            <button class="io-button" id="io-export">📤 匯出紀錄</button>
+            <button class="io-button secondary" id="io-import-file">📥 從檔案匯入</button>
+          </div>
+          <input type="file" id="io-file" accept="application/json,.json" hidden />
+          <p class="card-note">匯出會存成一個 .json 檔（iPad 會跳出分享面板，可以存到「檔案」App 或傳給別人）。匯入是「合併」不是覆蓋，同一筆訂單不會重複。</p>
+          <details>
+            <summary style="font-size:13px;font-weight:800;color:var(--ink-soft);cursor:pointer;padding:4px 0;">用貼上文字的方式匯出入</summary>
+            <textarea class="io-textarea" id="io-text" placeholder="按「複製到這裡」會把紀錄倒出來；也可以把別台裝置的內容貼進來再按「貼上匯入」。" style="margin-top:10px;"></textarea>
+            <div class="io-buttons" style="margin-top:10px;">
+              <button class="io-button secondary" id="io-dump">📋 複製到這裡</button>
+              <button class="io-button secondary" id="io-paste">📥 貼上匯入</button>
+            </div>
+          </details>
+        </div>
+      `;
+    }
+
+    function bindIO() {
+      const exportBtn = root.querySelector("#io-export");
+      if (!exportBtn) return;
+
+      exportBtn.addEventListener("click", exportOrders);
+
+      const fileInput = root.querySelector("#io-file");
+      root.querySelector("#io-import-file").addEventListener("click", () => fileInput.click());
+      fileInput.addEventListener("change", () => {
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => importOrders(String(reader.result));
+        reader.onerror = () => setStatus("err", "讀不到這個檔案，換一個試試看。");
+        reader.readAsText(file);
+      });
+
+      root.querySelector("#io-dump").addEventListener("click", () => {
+        const box = root.querySelector("#io-text");
+        box.value = JSON.stringify(exportPayload(), null, 2);
+        box.focus();
+        box.select();
+      });
+
+      root.querySelector("#io-paste").addEventListener("click", () => {
+        importOrders(root.querySelector("#io-text").value);
+      });
+    }
+
+    function exportPayload() {
+      return { app: "breakfast-shop", version: 1, exportedAt: new Date().toISOString(), orders: state.orders };
+    }
+
+    // iPad 上最好用的是分享面板（可存到「檔案」App、AirDrop、傳訊息），
+    // 所以先試 navigator.share；不支援才退回 <a download>，兩個都不行還有貼上文字框可以用。
+    async function exportOrders() {
+      const text = JSON.stringify(exportPayload(), null, 2);
+      const filename = `早餐店紀錄-${new Date().toISOString().slice(0, 10)}.json`;
+
+      try {
+        const file = new File([text], filename, { type: "application/json" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: "女兒早餐店紀錄" });
+          setStatus("ok", `已經匯出 ${state.orders.length} 筆紀錄。`);
+          return;
+        }
+      } catch (e) {
+        // 使用者按取消也會走到這裡，不用當成錯誤，直接往下退回下載。
+        if (e && e.name === "AbortError") return;
+      }
+
+      try {
+        const url = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setStatus("ok", `已經匯出 ${state.orders.length} 筆紀錄到下載資料夾。`);
+      } catch (e) {
+        setStatus("warn", "這個瀏覽器不給直接下載，請展開下面的「用貼上文字的方式匯出入」複製內容。");
+      }
+    }
+
+    // 匯入採合併：用訂單 id 去重，已經有的不會變成兩筆，時間新的排前面。
+    function importOrders(text) {
+      let incoming;
+      try {
+        const parsed = JSON.parse(text);
+        incoming = Array.isArray(parsed) ? parsed : parsed && parsed.orders;
+      } catch (e) {
+        setStatus("err", "看不懂這個內容，請確認是從這個頁面匯出的 .json。");
+        return;
+      }
+      if (!Array.isArray(incoming)) {
+        setStatus("err", "這個檔案裡沒有點餐紀錄。");
+        return;
+      }
+
+      const valid = incoming.filter((o) => o && o.id && Array.isArray(o.items));
+      if (valid.length === 0) {
+        setStatus("err", "這個檔案裡沒有可以匯入的紀錄。");
+        return;
+      }
+
+      const seen = new Set(state.orders.map((o) => o.id));
+      const added = valid.filter((o) => !seen.has(o.id));
+      state.orders = state.orders.concat(added).sort((a, b) => String(b.timestamp).localeCompare(String(a.timestamp)));
+      saveOrders(state.orders);
+
+      const skipped = valid.length - added.length;
+      setStatus(added.length ? "ok" : "warn",
+        added.length
+          ? `匯入了 ${added.length} 筆紀錄${skipped ? `（有 ${skipped} 筆本來就有，跳過了）` : ""}。`
+          : `這 ${valid.length} 筆紀錄本來就都有了，沒有新增。`);
+      render();
+    }
+
+    function setStatus(kind, text) {
+      state.status = { kind, text };
+      render();
+    }
+
+    // ---------- 小工具（跟 breakfast.html 同一套） ----------
+
+    function loadOrders() {
+      try {
+        return JSON.parse(localStorage.getItem(ORDERS_KEY)) || [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveOrders(orders) {
+      try {
+        localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+      } catch (e) {
+        setStatus("warn", "這個瀏覽器不讓網頁存資料，匯入的內容只在這一次有效。");
+      }
+    }
+
+    function twemojiUrl(emoji) {
+      const codepoints = Array.from(emoji)
+        .map((c) => c.codePointAt(0))
+        .filter((cp) => cp !== 0xfe0f)
+        .map((cp) => cp.toString(16))
+        .join("-");
+      return `https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/72x72/${codepoints}.png`;
+    }
+
+    function renderEmoji(emoji, cls) {
+      if (!emoji) return `<span class="${cls}"></span>`;
+      const url = twemojiUrl(emoji);
+      return `<img class="${cls}" src="${url}" alt="" onerror="this.outerHTML='<span class=&quot;${cls} is-fallback&quot;>${emoji}</span>'">`;
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[c]));
+    }
+  </script>
+</body>
+</html>

@@ -217,8 +217,15 @@
 
     .bo-item-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+      /* 加了注音之後名字變寬（「香蕉煎餅」四個字各帶一柱注音 + 聲調），格子要跟著加寬才不會擠。 */
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
       gap: 10px;
+    }
+
+    @media (max-width: 560px) {
+      .bo-item-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      }
     }
 
     .bo-item {
@@ -227,7 +234,7 @@
       border-radius: var(--radius-sm);
       background: var(--bg);
       padding: 12px 6px 10px;
-      min-height: 132px;
+      min-height: 150px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -255,6 +262,99 @@
       font-weight: 800;
       color: var(--ink);
       text-align: center;
+    }
+
+    /* ---------- 注音（每個字右邊直排一個，聲調另外定位） ---------- */
+    /* --han-size / --yin-size 一起控制大小，窄螢幕再用媒體查詢縮一級。 */
+    .has-zhuyin {
+      --han-size: 24px;
+      --yin-size: 12px;
+      --tone-pad: 0.75;
+      --char-gap: 3px;
+      --yin-gap: 2px;
+      /* 佔滿卡片的內容寬度。不寫的話這個 flex 容器是 shrink-to-fit，
+         解析出來的寬度會比可用寬度少幾個 px，害剛好放得下的四字名多折一行。 */
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      /* 允許換行當保險：聲調符號會讓字變寬（「藍莓優格」有 3 個聲調，比「香蕉煎餅」寬），
+         窄螢幕上寧可折成兩行，也不要凸出卡片外。 */
+      flex-wrap: wrap;
+      gap: 4px var(--char-gap);
+    }
+
+    .zh-char {
+      display: inline-flex;
+      align-items: flex-start;
+    }
+
+    .zh-han {
+      font-size: var(--han-size);
+      line-height: 1.1;
+    }
+
+    .zh-yin {
+      position: relative;
+      display: inline-block;
+      margin-left: var(--yin-gap);
+    }
+
+    /* 有二三四聲的字，右邊留出擺聲調的位置；輕聲則是上面留位置。 */
+    .zh-yin.has-tone { padding-right: calc(var(--yin-size) * var(--tone-pad)); }
+    .zh-yin.has-neutral { padding-top: calc(var(--yin-size) * 1.05); }
+
+    .zh-base {
+      display: block;
+      writing-mode: vertical-rl;
+      text-orientation: upright;
+      font-size: var(--yin-size);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: 0;
+      color: #44403c;
+    }
+
+    .zh-tone {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      font-size: var(--yin-size);
+      font-weight: 800;
+      line-height: 1;
+      color: #44403c;
+    }
+
+    /* 輕聲的點擺在注音柱正上方，不是右邊。 */
+    .zh-tone.is-neutral {
+      right: auto;
+      bottom: auto;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    /* 目標裝置是 iPad，那邊維持 24px。窄螢幕一排只放得下 2 張卡，字級要跟著收，
+       不然「藍莓優格」「無糖豆漿」（各有 3 個聲調符號，是最寬的情況）會折成 3+1 的孤字。
+       分兩段收，讓大尺寸手機不用一路縮到最小。 */
+    @media (max-width: 560px) {
+      .has-zhuyin {
+        --han-size: 18px;
+        --yin-size: 10px;
+        --tone-pad: 0.7;
+        --char-gap: 2px;
+        --yin-gap: 1px;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .has-zhuyin {
+        --han-size: 15px;
+        --yin-size: 9px;
+        --tone-pad: 0.65;
+        --char-gap: 1px;
+        --yin-gap: 1px;
+      }
     }
 
     .bo-item-special {
@@ -364,6 +464,158 @@
       font-weight: 900;
       color: #c2410c;
       opacity: .7;
+    }
+
+    /* ---------- 餐盤（大圓盤 + 飲料杯） ---------- */
+    .tray {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      background: #f6ede0;
+      border: 3px solid #e6d8c2;
+      border-radius: 18px;
+      padding: 18px 14px;
+    }
+
+    /* 盤子：圓形白盤，內圈的 inset 陰影就是盤緣。食物直接擺上去，不畫格線。 */
+    .plate {
+      /* iPad 上取 250px；窄螢幕才按比例縮，杯子會自己折到盤子下面。 */
+      width: min(250px, 62vw);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--white);
+      border: 4px solid #e7e5e4;
+      box-shadow: inset 0 0 0 14px #fdfbf6;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      align-content: center;
+      gap: 4px;
+      /* 只能用固定值：百分比 padding 是對父層寬度算的，不是盤子自己，會把盤子撐成橢圓。 */
+      padding: 34px;
+    }
+
+    .plate-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      animation: plateDrop 0.35s ease;
+    }
+
+    /* 一樣就置中放大、兩樣並排、三樣則第一樣獨佔上排，下面並排兩樣。 */
+    .plate.count-1 .plate-item { width: 100%; }
+    .plate.count-2 .plate-item { width: 46%; }
+    .plate.count-3 .plate-item { width: 46%; }
+    .plate.count-3 .plate-item:first-child { width: 100%; }
+
+    @keyframes plateDrop {
+      0% { transform: translateY(-10px) scale(0.85); opacity: 0; }
+      60% { transform: translateY(2px) scale(1.05); opacity: 1; }
+      100% { transform: translateY(0) scale(1); }
+    }
+
+    .plate-emoji {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+    }
+
+    .plate.count-2 .plate-emoji,
+    .plate.count-3 .plate-emoji {
+      width: 36px;
+      height: 36px;
+    }
+
+    .plate-emoji.is-fallback {
+      font-size: 34px;
+      line-height: 42px;
+    }
+
+    .plate-name {
+      font-size: 14px;
+      font-weight: 900;
+      color: var(--ink);
+    }
+
+    .plate-empty {
+      font-size: 14px;
+      font-weight: 800;
+      color: #cfc6b4;
+      text-align: center;
+    }
+
+    /* 杯子：梯形圓底，空的時候是虛線。 */
+    .cup-side {
+      flex: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .cup {
+      width: 72px;
+      height: 90px;
+      border-radius: 10px 10px 28px 28px;
+      background: var(--white);
+      border: 3px dashed #ddd5c6;
+      box-shadow: inset 0 0 0 5px #fdfbf6;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+    }
+
+    .cup.filled {
+      border-style: solid;
+      border-color: #4dd0e1;
+      animation: plateDrop 0.35s ease;
+    }
+
+    .cup-emoji {
+      width: 30px;
+      height: 30px;
+      object-fit: contain;
+    }
+
+    .cup-emoji.is-fallback {
+      font-size: 26px;
+      line-height: 30px;
+    }
+
+    .cup-name {
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--ink);
+    }
+
+    .cup-label {
+      font-size: 11px;
+      font-weight: 900;
+      color: var(--ink-faint);
+      letter-spacing: 1px;
+    }
+
+    /* 窄螢幕盤子跟著縮，盤上的食物也要縮一級才不會頂到盤緣。 */
+    @media (max-width: 560px) {
+      .plate { padding: 28px; }
+      .plate-emoji { width: 36px; height: 36px; }
+      .plate.count-2 .plate-emoji,
+      .plate.count-3 .plate-emoji { width: 30px; height: 30px; }
+      .plate-name { font-size: 13px; }
+    }
+
+    /* 圓盤沒有格線，看不出少了哪一類，所以在下面補一行提示。 */
+    .tray-hint {
+      text-align: center;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--ink-faint);
     }
 
     .bo-summary-total {
@@ -633,14 +885,28 @@
       padding: 20px 12px;
     }
 
+    .bo-history-links {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .bo-stats-link,
     .bo-clear-all {
-      text-align: center;
       font-size: 13px;
       font-weight: 800;
-      color: #ef4444;
       cursor: pointer;
       padding: 8px;
       text-decoration: underline;
+    }
+
+    .bo-stats-link {
+      color: #7c3aed;
+    }
+
+    .bo-clear-all {
+      color: #ef4444;
     }
 
     /* ---------- 家長設定面板 ---------- */
@@ -892,6 +1158,64 @@
       cursor: pointer;
     }
 
+    .parent-toggle {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      width: 100%;
+      border: 2px solid #f5f5f4;
+      border-radius: 14px;
+      background: var(--bg);
+      padding: 14px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .parent-toggle.on {
+      border-color: #22c55e;
+      background: #dcfce7;
+    }
+
+    .parent-toggle-box {
+      width: 26px;
+      height: 26px;
+      flex: 0 0 26px;
+      border-radius: 8px;
+      border: 2px solid #d6d3d1;
+      background: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 900;
+      color: transparent;
+    }
+
+    .parent-toggle.on .parent-toggle-box {
+      border-color: #22c55e;
+      background: #22c55e;
+      color: var(--white);
+    }
+
+    .parent-toggle-text {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .parent-toggle-title {
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--ink);
+    }
+
+    .parent-toggle-note {
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.5;
+      color: var(--ink-soft);
+    }
+
     .parent-actions {
       display: flex;
       flex-direction: column;
@@ -935,13 +1259,14 @@
         label: "主食",
         emoji: "🍳",
         accent: "main",
+        zhuyin: ["ㄓㄨˇ", "ㄕˊ"],
         items: [
-          { id: "egg-crepe", name: "蛋餅", emoji: "🫓", price: 25 },
-          { id: "sweet-potato", name: "地瓜", emoji: "🍠", price: 20 },
-          { id: "cucumber", name: "小黃瓜", emoji: "🥒", price: 10 },
-          { id: "banana-pancake", name: "香蕉煎餅", emoji: "🥞", price: 30 },
-          { id: "mantou", name: "小饅頭", emoji: "🍞", icon: "mantou", price: 15 },
-          { id: "blueberry-yogurt", name: "藍莓優格", emoji: "🫐", price: 35 }
+          { id: "egg-crepe", name: "蛋餅", emoji: "🫓", price: 25, zhuyin: ["ㄉㄢˋ", "ㄅㄧㄥˇ"] },
+          { id: "sweet-potato", name: "地瓜", emoji: "🍠", price: 20, zhuyin: ["ㄉㄧˋ", "ㄍㄨㄚ"] },
+          { id: "cucumber", name: "小黃瓜", emoji: "🥒", price: 10, zhuyin: ["ㄒㄧㄠˇ", "ㄏㄨㄤˊ", "ㄍㄨㄚ"] },
+          { id: "banana-pancake", name: "香蕉煎餅", emoji: "🥞", price: 30, zhuyin: ["ㄒㄧㄤ", "ㄐㄧㄠ", "ㄐㄧㄢ", "ㄅㄧㄥˇ"] },
+          { id: "mantou", name: "小饅頭", emoji: "🍞", icon: "mantou", price: 15, zhuyin: ["ㄒㄧㄠˇ", "ㄇㄢˊ", "˙ㄊㄡ"] },
+          { id: "blueberry-yogurt", name: "藍莓優格", emoji: "🫐", price: 35, zhuyin: ["ㄌㄢˊ", "ㄇㄟˊ", "ㄧㄡ", "ㄍㄜˊ"] }
         ]
       },
       {
@@ -949,10 +1274,11 @@
         label: "蛋白質",
         emoji: "💪",
         accent: "protein",
+        zhuyin: ["ㄉㄢˋ", "ㄅㄞˊ", "ㄓˊ"],
         items: [
-          { id: "boiled-egg", name: "水煮蛋", emoji: "🥚", price: 10 },
-          { id: "fried-egg", name: "荷包蛋", emoji: "🍳", price: 15 },
-          { id: "cheese", name: "起司", emoji: "🧀", price: 15 }
+          { id: "boiled-egg", name: "水煮蛋", emoji: "🥚", price: 10, zhuyin: ["ㄕㄨㄟˇ", "ㄓㄨˇ", "ㄉㄢˋ"] },
+          { id: "fried-egg", name: "荷包蛋", emoji: "🍳", price: 15, zhuyin: ["ㄏㄜˊ", "ㄅㄠ", "ㄉㄢˋ"] },
+          { id: "cheese", name: "起司", emoji: "🧀", price: 15, zhuyin: ["ㄑㄧˇ", "ㄙ"] }
         ]
       },
       {
@@ -964,23 +1290,24 @@
         emoji: "🍎",
         accent: "fruit",
         acceptsDaily: true,
+        zhuyin: ["ㄕㄨㄟˇ", "ㄍㄨㄛˇ"],
         items: [
-          { id: "banana", name: "香蕉", emoji: "🍌", price: 15 },
-          { id: "apple", name: "蘋果", emoji: "🍎", price: 20 }
+          { id: "banana", name: "香蕉", emoji: "🍌", price: 15, zhuyin: ["ㄒㄧㄤ", "ㄐㄧㄠ"] },
+          { id: "apple", name: "蘋果", emoji: "🍎", price: 20, zhuyin: ["ㄆㄧㄥˊ", "ㄍㄨㄛˇ"] }
         ],
         // 家長設定面板裡「從清單挑」的選項，不會直接出現在點餐畫面上。
         extraItems: [
-          { id: "strawberry", name: "草莓", emoji: "🍓", price: 30 },
-          { id: "grape", name: "葡萄", emoji: "🍇", price: 25 },
-          { id: "orange", name: "橘子", emoji: "🍊", price: 15 },
-          { id: "watermelon", name: "西瓜", emoji: "🍉", price: 20 },
-          { id: "kiwi", name: "奇異果", emoji: "🥝", price: 20 },
-          { id: "pineapple", name: "鳳梨", emoji: "🍍", price: 25 },
-          { id: "mango", name: "芒果", emoji: "🥭", price: 30 },
-          { id: "pear", name: "水梨", emoji: "🍐", price: 25 },
-          { id: "tomato", name: "小番茄", emoji: "🍅", price: 15 },
-          { id: "guava", name: "芭樂", emoji: "🍈", price: 20 },
-          { id: "waxapple", name: "蓮霧", emoji: "🍎", price: 25 }
+          { id: "strawberry", name: "草莓", emoji: "🍓", price: 30, zhuyin: ["ㄘㄠˇ", "ㄇㄟˊ"] },
+          { id: "grape", name: "葡萄", emoji: "🍇", price: 25, zhuyin: ["ㄆㄨˊ", "ㄊㄠˊ"] },
+          { id: "orange", name: "橘子", emoji: "🍊", price: 15, zhuyin: ["ㄐㄩˊ", "˙ㄗ"] },
+          { id: "watermelon", name: "西瓜", emoji: "🍉", price: 20, zhuyin: ["ㄒㄧ", "ㄍㄨㄚ"] },
+          { id: "kiwi", name: "奇異果", emoji: "🥝", price: 20, zhuyin: ["ㄑㄧˊ", "ㄧˋ", "ㄍㄨㄛˇ"] },
+          { id: "pineapple", name: "鳳梨", emoji: "🍍", price: 25, zhuyin: ["ㄈㄥˋ", "ㄌㄧˊ"] },
+          { id: "mango", name: "芒果", emoji: "🥭", price: 30, zhuyin: ["ㄇㄤˊ", "ㄍㄨㄛˇ"] },
+          { id: "pear", name: "水梨", emoji: "🍐", price: 25, zhuyin: ["ㄕㄨㄟˇ", "ㄌㄧˊ"] },
+          { id: "tomato", name: "小番茄", emoji: "🍅", price: 15, zhuyin: ["ㄒㄧㄠˇ", "ㄈㄢ", "ㄑㄧㄝˊ"] },
+          { id: "guava", name: "芭樂", emoji: "🍈", price: 20, zhuyin: ["ㄅㄚ", "ㄌㄜˋ"] },
+          { id: "waxapple", name: "蓮霧", emoji: "🍎", price: 25, zhuyin: ["ㄌㄧㄢˊ", "ㄨˋ"] }
         ]
       },
       {
@@ -988,10 +1315,11 @@
         label: "飲料",
         emoji: "🥤",
         accent: "drink",
+        zhuyin: ["ㄧㄣˇ", "ㄌㄧㄠˋ"],
         items: [
-          { id: "milk", name: "牛奶", emoji: "🥛", price: 20 },
-          { id: "soy-milk", name: "無糖豆漿", emoji: "🫘", price: 15 },
-          { id: "water", name: "水", emoji: "💧", price: 5 }
+          { id: "milk", name: "牛奶", emoji: "🥛", price: 20, zhuyin: ["ㄋㄧㄡˊ", "ㄋㄞˇ"] },
+          { id: "soy-milk", name: "無糖豆漿", emoji: "🫘", price: 15, zhuyin: ["ㄨˊ", "ㄊㄤˊ", "ㄉㄡˋ", "ㄐㄧㄤ"] },
+          { id: "water", name: "水", emoji: "💧", price: 5, zhuyin: ["ㄕㄨㄟˇ"] }
         ]
       }
     ];
@@ -1000,10 +1328,34 @@
     // 讓使用者輸入的內容跑進去會有注入風險），輸入的名稱則一律走 escapeHtml。
     const FRUIT_EMOJI_PALETTE = ["🍈", "🍓", "🍇", "🍊", "🍉", "🥝", "🍍", "🥭", "🍐", "🍅", "🍑", "🍒", "🥥", "🫐", "🍌", "🍎"];
 
+    // 二三四聲的符號（一聲不標）。輕聲的 ˙ 寫在音節最前面，另外處理。
+    // 宣告在這裡是因為 render() 在下面就會馬上跑，const 不會 hoist。
+    const TONE_MARKS = ["ˊ", "ˇ", "ˋ"];
+
     // 今日特選存在 localStorage，而且綁「哪一天設定的」。
     // 隔天就自動失效（水果區回到只有香蕉、蘋果），因為昨天有的水果今天不一定還有；
     // 家長設定面板裡會保留上次的內容，按「沿用」一鍵帶回來，不用整組重挑。
     const DAILY_KEY = "breakfast:daily-fruits";
+
+    // 刪除紀錄的開關由家長決定，預設關閉：關著的時候每筆的 ✕ 跟「清除全部紀錄」都不會出現，
+    // 小孩就不可能誤刪掉整本紀錄。這是長期設定，不像今日特選會過夜失效。
+    const ALLOW_DELETE_KEY = "breakfast:allow-delete";
+
+    function loadAllowDelete() {
+      try {
+        return localStorage.getItem(ALLOW_DELETE_KEY) === "1";
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function saveAllowDelete(allow) {
+      try {
+        localStorage.setItem(ALLOW_DELETE_KEY, allow ? "1" : "0");
+      } catch (e) {
+        // 寫不進去就讓設定只在這一輪有效。
+      }
+    }
 
     function todayKey() {
       const d = new Date();
@@ -1047,7 +1399,9 @@
       // 只有「今天」設定的才算數，昨天的設定不會出現在點餐畫面上。
       dailySpecials: savedDaily.date === todayKey() ? savedDaily.items : [],
       lastDaily: savedDaily,          // 給家長面板的「沿用上次」用
-      parentDraft: null               // 家長面板開著時的暫存清單
+      allowDelete: loadAllowDelete(),
+      parentDraft: null,              // 家長面板開著時的暫存清單
+      parentDraftAllowDelete: false   // 同上，按「完成設定」才寫入
     };
 
     render();
@@ -1110,7 +1464,7 @@
         const itemId = state.selected[group.id];
         if (!itemId) return;
         const item = groupItems(group).find((i) => i.id === itemId);
-        if (item) list.push({ category: group.label, name: item.name, emoji: item.emoji, icon: item.icon, price: item.price });
+        if (item) list.push({ categoryId: group.id, category: group.label, name: item.name, emoji: item.emoji, icon: item.icon, price: item.price, zhuyin: item.zhuyin });
       });
       return list;
     }
@@ -1152,14 +1506,54 @@
         <div class="order-count">🧺 已點 ${picked.length} 樣</div>
         ${BREAKFAST_MENU.map(renderGroup).join("")}
         <div class="bo-summary">
-          <span class="bo-summary-label">🧾 我的餐盤</span>
-          <div class="bo-summary-chips">${picked.length === 0
-            ? `<span class="bo-summary-empty">還沒點東西喔</span>`
-            : picked.map((i) => `<span class="bo-summary-chip">${renderItemIcon(i, "bo-chip-emoji")}${escapeHtml(i.name)}<span class="bo-chip-price">${i.price} 元</span></span>`).join("")}</div>
+          <span class="bo-summary-label">🍽️ 我的餐盤</span>
+          ${renderTray(picked)}
           ${picked.length === 0 ? "" : `<div class="bo-summary-total">💰 合計 <strong>${total}</strong> 元</div>`}
         </div>
         <button class="big-button" id="bo-submit" ${picked.length === 0 ? "disabled" : ""}>🛎️ 送出訂單${picked.length === 0 ? "" : `（${total} 元）`}</button>
         ${renderHistory()}
+      `;
+    }
+
+    // 餐盤：一個大圓盤盛食物、飲料杯放旁邊，像真的一份早餐，盤面上不畫格線。
+    // 沒有格子就看不出「哪一類還沒點」，所以盤子下面補一行淡色提示補回這個資訊。
+    // 只用在點餐畫面（食物會隨著點選一樣一樣出現）；送出後的訂單卡不重複顯示餐盤，
+    // 那邊已經有逐項條列跟總金額了，再放一次餐盤只是佔位置。
+    function renderTray(items) {
+      const byCategory = {};
+      items.forEach((i) => { byCategory[i.categoryId || i.category] = i; });
+
+      const drinkGroup = BREAKFAST_MENU.find((g) => g.id === "drink");
+      const drink = byCategory.drink || byCategory[drinkGroup.label];
+      // 飲料進杯子，其他三類擺在盤子上。
+      const foods = BREAKFAST_MENU.filter((g) => g.id !== "drink")
+        .map((g) => byCategory[g.id] || byCategory[g.label])
+        .filter(Boolean);
+      const missing = BREAKFAST_MENU.filter((g) => !(byCategory[g.id] || byCategory[g.label]));
+
+      return `
+        <div class="tray">
+          <div class="plate count-${foods.length}">
+            ${foods.length === 0
+              ? `<span class="plate-empty">把早餐放上來吧！</span>`
+              : foods.map((item) => `
+                <span class="plate-item">
+                  ${renderItemIcon(item, "plate-emoji")}
+                  <span class="plate-name">${escapeHtml(item.name)}</span>
+                </span>`).join("")}
+          </div>
+          <div class="cup-side">
+            <div class="cup${drink ? " filled" : ""}">
+              ${drink
+                ? `${renderItemIcon(drink, "cup-emoji")}<span class="cup-name">${escapeHtml(drink.name)}</span>`
+                : ""}
+            </div>
+            <span class="cup-label">飲料</span>
+          </div>
+        </div>
+        ${missing.length > 0 && missing.length < BREAKFAST_MENU.length
+          ? `<div class="tray-hint">還沒點：${missing.map((g) => escapeHtml(g.label)).join("、")}</div>`
+          : ""}
       `;
     }
 
@@ -1184,7 +1578,7 @@
               <button class="bo-item${pickedId === item.id ? " selected" : ""}" data-group="${group.id}" data-item="${escapeHtml(item.id)}">
                 ${item.special ? `<span class="bo-item-special">✨</span>` : ""}
                 ${renderItemIcon(item, "bo-item-emoji")}
-                <span class="bo-item-name">${escapeHtml(item.name)}</span>
+                ${renderName(item, "bo-item-name")}
                 <span class="bo-item-price">${item.price} 元</span>
                 <span class="bo-item-check">✓</span>
               </button>`).join("")}
@@ -1224,7 +1618,18 @@
       `;
     }
 
+    // 刪除相關的 UI（每筆的 ✕、清除全部紀錄）只有在家長開了「可刪除紀錄」時才畫出來。
+    // 「看統計」不受影響，而且沒有紀錄時也要留著 —— 換裝置後就是從統計頁把備份匯入回來的。
     function renderHistory() {
+      const links = `
+        <div class="bo-history-links">
+          <a class="bo-stats-link" href="breakfast-stats.html">📊 看統計</a>
+          ${state.allowDelete && state.orders.length > 0
+            ? `<span class="bo-clear-all" id="bo-clear-all">🗑️ 清除全部紀錄</span>`
+            : ""}
+        </div>
+      `;
+
       if (state.orders.length === 0) {
         return `
           <div class="bo-history">
@@ -1232,6 +1637,7 @@
               <span class="bo-history-title">📋 點餐紀錄</span>
             </div>
             <div class="bo-history-empty">還沒有任何紀錄，點好餐按「送出訂單」就會存在這裡 ✨</div>
+            ${links}
           </div>
         `;
       }
@@ -1248,10 +1654,10 @@
                   <span class="bo-history-time">🕘 ${formatFullTime(o.timestamp)}${sumPrice(o.items) === null ? "" : `<span class="bo-history-total">${sumPrice(o.items)} 元</span>`}</span>
                   <span class="bo-history-items">${o.items.map((i) => `<span class="bo-history-chip">${renderItemIcon(i, "bo-chip-emoji")}${escapeHtml(i.name)}</span>`).join("")}</span>
                 </div>
-                <button class="bo-history-remove" data-order-id="${o.id}" aria-label="刪除這筆紀錄">✕</button>
+                ${state.allowDelete ? `<button class="bo-history-remove" data-order-id="${o.id}" aria-label="刪除這筆紀錄">✕</button>` : ""}
               </div>`).join("")}
           </div>
-          <div class="bo-clear-all" id="bo-clear-all">🗑️ 清除全部紀錄</div>
+          ${links}
         </div>
       `;
     }
@@ -1289,6 +1695,7 @@
 
     function openParentPanel() {
       state.parentDraft = state.dailySpecials.map((i) => ({ ...i }));
+      state.parentDraftAllowDelete = state.allowDelete;
       renderParentPanel();
     }
 
@@ -1351,9 +1758,20 @@
             </div>
           </div>
 
+          <div class="parent-section">
+            <span class="parent-section-title">點餐紀錄</span>
+            <button class="parent-toggle${state.parentDraftAllowDelete ? " on" : ""}" id="parent-allow-delete" role="switch" aria-checked="${state.parentDraftAllowDelete}">
+              <span class="parent-toggle-box">✓</span>
+              <span class="parent-toggle-text">
+                <span class="parent-toggle-title">可刪除紀錄</span>
+                <span class="parent-toggle-note">打開才會出現每筆的 ✕ 跟「清除全部紀錄」。關著的話小孩不會誤刪。</span>
+              </span>
+            </button>
+          </div>
+
           <div class="parent-actions">
             <button class="big-button" id="parent-save">✅ 完成設定</button>
-            <button class="ghost-button" id="parent-clear">🗑️ 全部清空</button>
+            <button class="ghost-button" id="parent-clear">🗑️ 清空今日特選</button>
           </div>
         </div>
       `;
@@ -1405,6 +1823,11 @@
         });
       }
 
+      overlay.querySelector("#parent-allow-delete").addEventListener("click", () => {
+        state.parentDraftAllowDelete = !state.parentDraftAllowDelete;
+        renderParentPanel();
+      });
+
       overlay.querySelector("#parent-clear").addEventListener("click", () => {
         state.parentDraft = [];
         renderParentPanel();
@@ -1414,6 +1837,8 @@
         state.dailySpecials = draft.map((i) => ({ ...i }));
         saveDailySpecials(state.dailySpecials);
         state.lastDaily = { date: todayKey(), items: state.dailySpecials };
+        state.allowDelete = state.parentDraftAllowDelete;
+        saveAllowDelete(state.allowDelete);
         // 特選被拿掉時，小孩原本選的那一樣要一起清掉，否則會送出畫面上已經看不到的品項。
         const fruitPicked = state.selected.fruit;
         if (fruitPicked && !groupItems(fruitGroup).some((i) => i.id === fruitPicked)) delete state.selected.fruit;
@@ -1438,6 +1863,39 @@
     function renderEmoji(emoji, cls) {
       const url = twemojiUrl(emoji);
       return `<img class="${cls}" src="${url}" alt="${escapeHtml(emoji)}" onerror="this.outerHTML='<span class=&quot;${cls} is-fallback&quot;>${emoji}</span>'">`;
+    }
+
+    // 名稱加注音：每個字右邊直排一個注音，跟課本的排版一樣。
+    // 不用 <ruby>，因為 bopomofo 需要的 ruby-position:inter-character 各家瀏覽器支援不一致，
+    // 改用 flex + writing-mode:vertical-rl 自己排，行為才會到處都一樣。
+    // 家長自己輸入的水果沒有注音資料，就退回只顯示文字。
+    // 課本的直排注音，聲調不是接在注音柱最後面，而是另外擺：
+    // 二三四聲放在注音柱「右邊、對齊最後一個符號」，輕聲的點放在注音柱「正上方」。
+    // 所以這裡先把聲調從音節字串裡拆出來，讓 CSS 各自定位。
+    function splitZhuyin(syllable) {
+      if (syllable.startsWith("˙")) return { base: syllable.slice(1), tone: "˙", neutral: true };
+      const last = syllable.slice(-1);
+      if (TONE_MARKS.includes(last)) return { base: syllable.slice(0, -1), tone: last, neutral: false };
+      return { base: syllable, tone: "", neutral: false };
+    }
+
+    function renderName(item, cls) {
+      const chars = Array.from(item.name);
+      if (!Array.isArray(item.zhuyin) || item.zhuyin.length !== chars.length) {
+        return `<span class="${cls}">${escapeHtml(item.name)}</span>`;
+      }
+      return `<span class="${cls} has-zhuyin">${chars.map((c, i) => {
+        const { base, tone, neutral } = splitZhuyin(item.zhuyin[i]);
+        const mods = `${tone ? (neutral ? " has-neutral" : " has-tone") : ""}`;
+        return `
+        <span class="zh-char">
+          <span class="zh-han">${escapeHtml(c)}</span>
+          <span class="zh-yin${mods}">
+            <span class="zh-base">${escapeHtml(base)}</span>
+            ${tone ? `<span class="zh-tone${neutral ? " is-neutral" : ""}">${tone}</span>` : ""}
+          </span>
+        </span>`;
+      }).join("")}</span>`;
     }
 
     // 品項圖示：有自畫的 SVG 就用自畫的，沒有才回去用 Twemoji 圖。
