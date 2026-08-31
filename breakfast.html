@@ -269,6 +269,7 @@
     .has-zhuyin {
       --han-size: 24px;
       --yin-size: 12px;
+      --yin-line: 13px;
       --tone-pad: 0.75;
       --char-gap: 3px;
       --yin-gap: 2px;
@@ -304,15 +305,24 @@
     .zh-yin.has-tone { padding-right: calc(var(--yin-size) * var(--tone-pad)); }
     .zh-yin.has-neutral { padding-top: calc(var(--yin-size) * 1.05); }
 
+    /* 注音柱不用 writing-mode:vertical-rl —— iPad 的 Safari 排直排注音時，
+       字元的直向 advance 是拿橫排字型的度量換算的，會比字身小，符號就疊在一起。
+       改成一個符號一個 block、自己用 flex 疊起來，高度由 --yin-line 寫死，
+       所有瀏覽器排出來都一樣，也不會重疊。 */
     .zh-base {
-      display: block;
-      writing-mode: vertical-rl;
-      text-orientation: upright;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       font-size: var(--yin-size);
       font-weight: 800;
-      line-height: 1.05;
       letter-spacing: 0;
       color: #44403c;
+    }
+
+    .zh-sym {
+      display: block;
+      height: var(--yin-line);
+      line-height: var(--yin-line);
     }
 
     .zh-tone {
@@ -341,6 +351,7 @@
       .has-zhuyin {
         --han-size: 18px;
         --yin-size: 10px;
+        --yin-line: 11px;
         --tone-pad: 0.7;
         --char-gap: 2px;
         --yin-gap: 1px;
@@ -351,6 +362,7 @@
       .has-zhuyin {
         --han-size: 15px;
         --yin-size: 9px;
+        --yin-line: 10px;
         --tone-pad: 0.65;
         --char-gap: 1px;
         --yin-gap: 1px;
@@ -479,23 +491,64 @@
       padding: 18px 14px;
     }
 
-    /* 盤子：圓形白盤，內圈的 inset 陰影就是盤緣。食物直接擺上去，不畫格線。 */
+    /* 餐盤：圓角矩形的分隔餐盤（幼兒園那種），一類一格。
+       不用圓盤了 —— 複選之後一格可能有 6 樣，圓形容器的四個角是死區，
+       內容一多還會把 aspect-ratio 撐破變成橢圓、食物掉出盤緣。
+       分格的好處是位置固定：點一樣蛋白質只有蛋白質那格會動，其他格紋風不動。
+       空格用虛線 + 類別名，「哪一類還沒點」直接看得出來，不用再靠盤子底下補一行提示。 */
     .plate {
-      /* iPad 上取 250px；窄螢幕才按比例縮，杯子會自己折到盤子下面。 */
-      width: min(250px, 62vw);
-      aspect-ratio: 1;
-      border-radius: 50%;
-      background: var(--white);
+      /* iPad 上取 360px；窄螢幕才按比例縮，杯子會自己折到盤子下面。 */
+      width: min(360px, 86vw);
+      background: #fdfbf6;
       border: 4px solid #e7e5e4;
-      box-shadow: inset 0 0 0 14px #fdfbf6;
+      border-radius: 22px;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    /* 第一格（主食）獨佔上排，因為它的選項最多（6 樣）；
+       蛋白質、水果分下排。這條規則假設食物類別剛好 3 類、而且選項最多的排在第一個。 */
+    .plate-cell:first-child { grid-column: 1 / -1; }
+
+    .plate-cell {
+      /* 高度寫死成「折成兩排也放得下」的高度：不管這格是空的、1 樣還是 6 樣，
+         餐盤總高度都一樣，點來點去版面不會上下跳。數字是量出來的，不是猜的。 */
+      min-height: 138px;
+      border-radius: 16px;
+      border: 2px solid #ece5d8;
+      background: var(--white);
+      padding: 7px 6px 9px;
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      align-content: center;
-      gap: 4px;
-      /* 只能用固定值：百分比 padding 是對父層寬度算的，不是盤子自己，會把盤子撐成橢圓。 */
-      padding: 34px;
+      gap: 6px;
+      /* grid 子項預設 min-width:auto，不加這行長名字會把格子撐寬、擠壞另一格。 */
+      min-width: 0;
+    }
+
+    /* 空格是虛線，跟旁邊空杯子的表現一致。 */
+    .plate-cell.is-empty {
+      border-style: dashed;
+      border-color: #ddd5c6;
+      background: transparent;
+    }
+
+    .plate-cell-label {
+      font-size: 11px;
+      font-weight: 900;
+      color: var(--ink-faint);
+      letter-spacing: 1px;
+    }
+
+    .plate-cell-items {
+      display: grid;
+      justify-items: center;
+      align-items: start;
+      gap: 6px 4px;
+      width: 100%;
     }
 
     .plate-item {
@@ -503,14 +556,13 @@
       flex-direction: column;
       align-items: center;
       gap: 2px;
-      animation: plateDrop 0.35s ease;
+      min-width: 0;
     }
 
-    /* 一樣就置中放大、兩樣並排、三樣則第一樣獨佔上排，下面並排兩樣。 */
-    .plate.count-1 .plate-item { width: 100%; }
-    .plate.count-2 .plate-item { width: 46%; }
-    .plate.count-3 .plate-item { width: 46%; }
-    .plate.count-3 .plate-item:first-child { width: 100%; }
+    /* 動畫只加在「這次新放上去」的那一樣（render 後由 markNewTrayItems 補 class）。
+       常駐在 .plate-item 上的話，每點一下整盤都會重跳一次，樣數一多就是雜訊。 */
+    .plate-item.is-new,
+    .cup.is-new { animation: plateDrop 0.35s ease; }
 
     @keyframes plateDrop {
       0% { transform: translateY(-10px) scale(0.85); opacity: 0; }
@@ -519,36 +571,52 @@
     }
 
     .plate-emoji {
-      width: 42px;
-      height: 42px;
+      width: 38px;
+      height: 38px;
       object-fit: contain;
     }
 
-    .plate.count-2 .plate-emoji,
-    .plate.count-3 .plate-emoji {
-      width: 36px;
-      height: 36px;
-    }
-
     .plate-emoji.is-fallback {
-      font-size: 34px;
-      line-height: 42px;
+      font-size: 30px;
+      line-height: 38px;
     }
 
     .plate-name {
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 900;
       color: var(--ink);
-    }
-
-    .plate-empty {
-      font-size: 14px;
-      font-weight: 800;
-      color: #cfc6b4;
       text-align: center;
+      line-height: 1.15;
+      /* 中文不該在詞中間斷，太長就整個折到第二行，不要把格子撐寬。 */
+      word-break: keep-all;
+      max-width: 72px;
     }
 
-    /* 杯子：梯形圓底，空的時候是虛線。 */
+    /* 每格按自己的樣數降級，數量→欄數是寫死的，不讓瀏覽器自由 wrap
+       （自由 wrap 會排出 3+1 這種孤兒排）。count-6 同時吃 6 樣以上。 */
+    .plate-cell.count-1 .plate-cell-items { grid-template-columns: 1fr; }
+    .plate-cell.count-2 .plate-cell-items { grid-template-columns: repeat(2, 1fr); }
+    .plate-cell.count-3 .plate-cell-items { grid-template-columns: repeat(3, 1fr); }
+    .plate-cell.count-4 .plate-cell-items { grid-template-columns: repeat(2, 1fr); }
+    .plate-cell.count-5 .plate-cell-items { grid-template-columns: repeat(3, 1fr); }
+    .plate-cell.count-6 .plate-cell-items { grid-template-columns: repeat(3, 1fr); }
+
+    /* 主食格是整排寬，同樣的樣數排得下更多欄，不用折行。 */
+    .plate-cell:first-child.count-4 .plate-cell-items { grid-template-columns: repeat(4, 1fr); }
+    .plate-cell:first-child.count-5 .plate-cell-items { grid-template-columns: repeat(5, 1fr); }
+    .plate-cell:first-child.count-6 .plate-cell-items { grid-template-columns: repeat(6, 1fr); }
+
+    .plate-cell.count-1 .plate-emoji { width: 44px; height: 44px; }
+    .plate-cell.count-1 .plate-name { font-size: 13px; }
+    .plate-cell.count-3 .plate-emoji { width: 32px; height: 32px; }
+    .plate-cell.count-4 .plate-emoji { width: 30px; height: 30px; }
+    .plate-cell.count-5 .plate-emoji { width: 26px; height: 26px; }
+    .plate-cell.count-6 .plate-emoji { width: 24px; height: 24px; }
+    .plate-cell.count-4 .plate-name,
+    .plate-cell.count-5 .plate-name,
+    .plate-cell.count-6 .plate-name { font-size: 11px; max-width: 60px; }
+
+    /* 杯子：梯形圓底，空的時候是虛線。飲料只能選一杯，所以杯子維持單一格。 */
     .cup-side {
       flex: none;
       display: flex;
@@ -574,7 +642,6 @@
     .cup.filled {
       border-style: solid;
       border-color: #4dd0e1;
-      animation: plateDrop 0.35s ease;
     }
 
     .cup-emoji {
@@ -601,21 +668,18 @@
       letter-spacing: 1px;
     }
 
-    /* 窄螢幕盤子跟著縮，盤上的食物也要縮一級才不會頂到盤緣。 */
+    /* 窄螢幕餐盤跟著縮，格子裡的東西也要縮一級才不會擠。 */
     @media (max-width: 560px) {
-      .plate { padding: 28px; }
-      .plate-emoji { width: 36px; height: 36px; }
-      .plate.count-2 .plate-emoji,
-      .plate.count-3 .plate-emoji { width: 30px; height: 30px; }
-      .plate-name { font-size: 13px; }
-    }
-
-    /* 圓盤沒有格線，看不出少了哪一類，所以在下面補一行提示。 */
-    .tray-hint {
-      text-align: center;
-      font-size: 13px;
-      font-weight: 800;
-      color: var(--ink-faint);
+      .plate { padding: 8px; gap: 6px; }
+      .plate-cell { min-height: 128px; padding: 6px 4px 8px; }
+      .plate-emoji { width: 32px; height: 32px; }
+      .plate-cell.count-1 .plate-emoji { width: 38px; height: 38px; }
+      .plate-cell.count-3 .plate-emoji { width: 28px; height: 28px; }
+      .plate-cell.count-4 .plate-emoji { width: 26px; height: 26px; }
+      .plate-cell.count-5 .plate-emoji { width: 23px; height: 23px; }
+      .plate-cell.count-6 .plate-emoji { width: 21px; height: 21px; }
+      .plate-name { font-size: 11px; max-width: 62px; }
+      .plate-cell.count-1 .plate-name { font-size: 12px; }
     }
 
     .bo-summary-total {
@@ -1047,6 +1111,20 @@
       cursor: pointer;
     }
 
+    /* 滿 4 種之後，沒被選到的那些變灰、點不動，讓「不能再加了」用看的就知道，不用等按了才沒反應。 */
+    .parent-preset:disabled,
+    .parent-add:disabled,
+    .parent-input:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .parent-note {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--ink-faint);
+    }
+
     .parent-preset.selected {
       border-color: #22c55e;
       background: #dcfce7;
@@ -1257,6 +1335,7 @@
       {
         id: "main",
         label: "主食",
+        multi: true,
         emoji: "🍳",
         accent: "main",
         zhuyin: ["ㄓㄨˇ", "ㄕˊ"],
@@ -1272,13 +1351,15 @@
       {
         id: "protein",
         label: "蛋白質",
+        multi: true,
         emoji: "💪",
         accent: "protein",
         zhuyin: ["ㄉㄢˋ", "ㄅㄞˊ", "ㄓˊ"],
         items: [
           { id: "boiled-egg", name: "水煮蛋", emoji: "🥚", price: 10, zhuyin: ["ㄕㄨㄟˇ", "ㄓㄨˇ", "ㄉㄢˋ"] },
           { id: "fried-egg", name: "荷包蛋", emoji: "🍳", price: 15, zhuyin: ["ㄏㄜˊ", "ㄅㄠ", "ㄉㄢˋ"] },
-          { id: "cheese", name: "起司", emoji: "🧀", price: 15, zhuyin: ["ㄑㄧˇ", "ㄙ"] }
+          { id: "cheese", name: "起司", emoji: "🧀", price: 15, zhuyin: ["ㄑㄧˇ", "ㄙ"] },
+          { id: "edamame", name: "毛豆", emoji: "🫛", price: 15, zhuyin: ["ㄇㄠˊ", "ㄉㄡˋ"] }
         ]
       },
       {
@@ -1287,6 +1368,7 @@
         // 沒設定的日子這一區就只有香蕉、蘋果，寧可少也不要給不存在的選項。
         id: "fruit",
         label: "水果",
+        multi: true,
         emoji: "🍎",
         accent: "fruit",
         acceptsDaily: true,
@@ -1311,6 +1393,7 @@
         ]
       },
       {
+        // 飲料刻意維持單選：一餐一杯，複選會變成「早餐配三杯飲料」。
         id: "drink",
         label: "飲料",
         emoji: "🥤",
@@ -1336,6 +1419,10 @@
     // 隔天就自動失效（水果區回到只有香蕉、蘋果），因為昨天有的水果今天不一定還有；
     // 家長設定面板裡會保留上次的內容，按「沿用」一鍵帶回來，不用整組重挑。
     const DAILY_KEY = "breakfast:daily-fruits";
+
+    // 今日特選的上限。水果區 = 固定的香蕉、蘋果 + 特選，設 4 是為了讓這一區最多 6 樣，
+    // 跟主食區（6 樣）齊高；再多就會讓水果區長得比其他三區都長，也超過小孩一次掃視得完的量。
+    const MAX_DAILY_FRUITS = 4;
 
     // 刪除紀錄的開關由家長決定，預設關閉：關著的時候每筆的 ✕ 跟「清除全部紀錄」都不會出現，
     // 小孩就不可能誤刪掉整本紀錄。這是長期設定，不像今日特選會過夜失效。
@@ -1366,7 +1453,8 @@
       try {
         const saved = JSON.parse(localStorage.getItem(DAILY_KEY));
         if (!saved || !Array.isArray(saved.items)) return { date: null, items: [] };
-        return { date: saved.date || null, items: saved.items };
+        // 上限是後來才加的，之前存的可能超過，讀進來就先截掉，不然畫面會比設定畫面允許的還多。
+        return { date: saved.date || null, items: saved.items.slice(0, MAX_DAILY_FRUITS) };
       } catch (e) {
         return { date: null, items: [] };
       }
@@ -1393,7 +1481,7 @@
     const savedDaily = loadDailySpecials();
     const state = {
       view: "order",   // "order" 點餐中 / "done" 送出後的訂單卡
-      selected: {},    // { 類別id: 品項id }，沒點的類別就不放 key
+      selected: {},    // { 類別id: [品項id] }，沒點的類別就不放 key。飲料的陣列長度最多 1。
       lastOrder: null,
       orders: loadOrders(),
       // 只有「今天」設定的才算數，昨天的設定不會出現在點餐畫面上。
@@ -1404,10 +1492,14 @@
       parentDraftAllowDelete: false   // 同上，按「完成設定」才寫入
     };
 
+    // 上一輪畫面上餐盤裡有哪些東西。用來判斷這次 render 誰是新加的，只讓新的播掉落動畫。
+    let shownTrayKeys = new Set();
+
     render();
 
     function render() {
       root.innerHTML = state.view === "done" ? renderDone() : renderOrder();
+      markNewTrayItems();
       bindCommon();
       bindParentGate();
       if (state.view === "done") {
@@ -1425,6 +1517,18 @@
         const submit = root.querySelector("#bo-submit");
         if (!submit.disabled) submit.addEventListener("click", handleSubmit);
       }
+    }
+
+    // render() 會整段重建 HTML，所以掉落動畫如果常駐在 CSS 上，每點一下整盤都會重跳一次。
+    // 這裡比對上一輪，只給「這次才出現」的那幾樣加 .is-new，動畫就只播在新加的東西上。
+    // 送出後的畫面沒有餐盤，這時會自然清空，回到點餐畫面時整盤重新播一次。
+    function markNewTrayItems() {
+      const current = new Set();
+      root.querySelectorAll("[data-key]").forEach((el) => {
+        current.add(el.dataset.key);
+        if (!shownTrayKeys.has(el.dataset.key)) el.classList.add("is-new");
+      });
+      shownTrayKeys = current;
     }
 
     // 歷史紀錄的刪除／清除按鈕在兩種畫面都會出現，統一在這裡綁。
@@ -1448,23 +1552,31 @@
       }
     }
 
+    // 有 multi 的類別可以複選（再點一次取消）；沒有的（飲料）是單選，點別的就換掉原本那杯。
     function toggleItem(groupId, itemId) {
-      if (state.selected[groupId] === itemId) {
-        delete state.selected[groupId];
-      } else {
-        state.selected[groupId] = itemId;
-      }
-      playTone(state.selected[groupId] ? 620 : 380, 0.08);
+      const group = BREAKFAST_MENU.find((g) => g.id === groupId);
+      const picked = state.selected[groupId] || [];
+      const wasPicked = picked.includes(itemId);
+      const next = wasPicked
+        ? picked.filter((id) => id !== itemId)
+        : (group.multi ? picked.concat(itemId) : [itemId]);
+      if (next.length > 0) state.selected[groupId] = next;
+      else delete state.selected[groupId];
+      playTone(wasPicked ? 380 : 620, 0.08);
       render();
     }
 
+    // 一律照菜單順序輸出，不是點選順序 —— 這樣同一樣東西在餐盤裡的位置固定，
+    // 不會因為先點誰而跳來跳去。
     function selectedList() {
       const list = [];
       BREAKFAST_MENU.forEach((group) => {
-        const itemId = state.selected[group.id];
-        if (!itemId) return;
-        const item = groupItems(group).find((i) => i.id === itemId);
-        if (item) list.push({ categoryId: group.id, category: group.label, name: item.name, emoji: item.emoji, icon: item.icon, price: item.price, zhuyin: item.zhuyin });
+        const ids = state.selected[group.id] || [];
+        if (ids.length === 0) return;
+        groupItems(group).forEach((item) => {
+          if (!ids.includes(item.id)) return;
+          list.push({ categoryId: group.id, category: group.label, id: item.id, name: item.name, emoji: item.emoji, icon: item.icon, price: item.price, zhuyin: item.zhuyin });
+        });
       });
       return list;
     }
@@ -1501,7 +1613,7 @@
         </div>
         <div class="info-banner">
           <span class="info-emoji">👩‍🍳</span>
-          <span>每一類可以點一樣，也可以不點～點好按下面的「送出訂單」！</span>
+          <span>主食、蛋白質、水果想點幾樣都可以，飲料只能選一杯～每一類都可以不點，點好按下面的「送出訂單」！</span>
         </div>
         <div class="order-count">🧺 已點 ${picked.length} 樣</div>
         ${BREAKFAST_MENU.map(renderGroup).join("")}
@@ -1515,35 +1627,44 @@
       `;
     }
 
-    // 餐盤：一個大圓盤盛食物、飲料杯放旁邊，像真的一份早餐，盤面上不畫格線。
-    // 沒有格子就看不出「哪一類還沒點」，所以盤子下面補一行淡色提示補回這個資訊。
+    // 餐盤：分格餐盤，食物三類一類一格、飲料進旁邊的杯子，像真的一份早餐。
+    // 每格自己標類別名，空格是虛線，所以「哪一類還沒點」看格子就知道，不用另外補提示文字。
     // 只用在點餐畫面（食物會隨著點選一樣一樣出現）；送出後的訂單卡不重複顯示餐盤，
     // 那邊已經有逐項條列跟總金額了，再放一次餐盤只是佔位置。
     function renderTray(items) {
       const byCategory = {};
-      items.forEach((i) => { byCategory[i.categoryId || i.category] = i; });
+      items.forEach((i) => {
+        // categoryId 是 selectedList 一定會給的；退回用 label 找是留給格式較舊的資料。
+        const key = i.categoryId || (BREAKFAST_MENU.find((g) => g.label === i.category) || {}).id;
+        if (!key) return;
+        (byCategory[key] = byCategory[key] || []).push(i);
+      });
 
-      const drinkGroup = BREAKFAST_MENU.find((g) => g.id === "drink");
-      const drink = byCategory.drink || byCategory[drinkGroup.label];
-      // 飲料進杯子，其他三類擺在盤子上。
-      const foods = BREAKFAST_MENU.filter((g) => g.id !== "drink")
-        .map((g) => byCategory[g.id] || byCategory[g.label])
-        .filter(Boolean);
-      const missing = BREAKFAST_MENU.filter((g) => !(byCategory[g.id] || byCategory[g.label]));
+      const drink = (byCategory.drink || [])[0];
+      const foodGroups = BREAKFAST_MENU.filter((g) => g.id !== "drink");
 
       return `
         <div class="tray">
-          <div class="plate count-${foods.length}">
-            ${foods.length === 0
-              ? `<span class="plate-empty">把早餐放上來吧！</span>`
-              : foods.map((item) => `
-                <span class="plate-item">
-                  ${renderItemIcon(item, "plate-emoji")}
-                  <span class="plate-name">${escapeHtml(item.name)}</span>
-                </span>`).join("")}
+          <div class="plate">
+            ${foodGroups.map((group) => {
+              const cell = byCategory[group.id] || [];
+              // 欄數/字級是靠 count-N 決定的，6 樣以上一律吃 count-6 那組。
+              return `
+                <div class="plate-cell count-${Math.min(cell.length, 6)}${cell.length === 0 ? " is-empty" : ""}">
+                  <span class="plate-cell-label">${escapeHtml(group.label)}</span>
+                  ${cell.length === 0 ? "" : `
+                    <div class="plate-cell-items">
+                      ${cell.map((item) => `
+                        <span class="plate-item" data-key="${escapeHtml(group.id)}:${escapeHtml(item.id || item.name)}">
+                          ${renderItemIcon(item, "plate-emoji")}
+                          <span class="plate-name">${escapeHtml(item.name)}</span>
+                        </span>`).join("")}
+                    </div>`}
+                </div>`;
+            }).join("")}
           </div>
           <div class="cup-side">
-            <div class="cup${drink ? " filled" : ""}">
+            <div class="cup${drink ? " filled" : ""}"${drink ? ` data-key="drink:${escapeHtml(drink.id || drink.name)}"` : ""}>
               ${drink
                 ? `${renderItemIcon(drink, "cup-emoji")}<span class="cup-name">${escapeHtml(drink.name)}</span>`
                 : ""}
@@ -1551,16 +1672,17 @@
             <span class="cup-label">飲料</span>
           </div>
         </div>
-        ${missing.length > 0 && missing.length < BREAKFAST_MENU.length
-          ? `<div class="tray-hint">還沒點：${missing.map((g) => escapeHtml(g.label)).join("、")}</div>`
-          : ""}
       `;
     }
 
     function renderGroup(group) {
       const items = groupItems(group);
-      const pickedId = state.selected[group.id];
-      const picked = pickedId && items.find((i) => i.id === pickedId);
+      const pickedIds = state.selected[group.id] || [];
+      const pickedItems = items.filter((i) => pickedIds.includes(i.id));
+      // 複選類報樣數，單選的飲料直接報是哪一杯；沒點的時候順便把規則講清楚。
+      const pickLabel = pickedItems.length === 0
+        ? (group.multi ? "可以點很多樣" : "只能選一杯")
+        : (group.multi ? `已選 ${pickedItems.length} 樣` : `已選：${escapeHtml(pickedItems[0].name)}`);
       const hasSpecials = group.acceptsDaily && state.dailySpecials.length > 0;
       const note = group.acceptsDaily
         ? (hasSpecials ? "香蕉、蘋果每天都有，今天還多了特選水果喔！" : "香蕉、蘋果每天都有～")
@@ -1570,12 +1692,12 @@
           <div class="bo-group-head">
             <span class="bo-group-icon">${renderEmoji(group.emoji, "bo-group-icon-img")}</span>
             <span class="bo-group-label">${escapeHtml(group.label)}${hasSpecials ? `<span class="bo-daily-tag">✨ 今日特選</span>` : ""}</span>
-            <span class="bo-group-pick${picked ? " is-picked" : ""}">${picked ? `已選：${escapeHtml(picked.name)}` : "可以不選"}</span>
+            <span class="bo-group-pick${pickedItems.length > 0 ? " is-picked" : ""}">${pickLabel}</span>
           </div>
           ${note ? `<div class="bo-group-note">${escapeHtml(note)}</div>` : ""}
           <div class="bo-item-grid">
             ${items.map((item) => `
-              <button class="bo-item${pickedId === item.id ? " selected" : ""}" data-group="${group.id}" data-item="${escapeHtml(item.id)}">
+              <button class="bo-item${pickedIds.includes(item.id) ? " selected" : ""}" data-group="${group.id}" data-item="${escapeHtml(item.id)}">
                 ${item.special ? `<span class="bo-item-special">✨</span>` : ""}
                 ${renderItemIcon(item, "bo-item-emoji")}
                 ${renderName(item, "bo-item-name")}
@@ -1715,6 +1837,7 @@
 
       const draft = state.parentDraft;
       const fruitGroup = BREAKFAST_MENU.find((g) => g.id === "fruit");
+      const full = draft.length >= MAX_DAILY_FRUITS;
       const stale = state.lastDaily.date && state.lastDaily.date !== todayKey() && state.lastDaily.items.length > 0;
 
       overlay.innerHTML = `
@@ -1726,10 +1849,11 @@
           <p class="parent-subtitle">設定今天的「今日特選」水果。香蕉、蘋果是固定的，不用設定。<br>設定只算今天，明天會自動清空，避免推薦到家裡沒有的水果。</p>
 
           <div class="parent-section">
-            <span class="parent-section-title">今天已選 ${draft.length} 種</span>
+            <span class="parent-section-title">今天已選 ${draft.length} / ${MAX_DAILY_FRUITS} 種</span>
             <div class="parent-chosen">${draft.length === 0
               ? `<span class="parent-empty">還沒設定 — 小孩現在只會看到香蕉、蘋果</span>`
               : draft.map((i) => `<span class="parent-chip">${renderEmoji(i.emoji, "bo-chip-emoji")}${escapeHtml(i.name)}<span class="bo-chip-price">${i.price} 元</span><button class="parent-chip-remove" data-remove="${escapeHtml(i.id)}" aria-label="移除">✕</button></span>`).join("")}</div>
+            ${full ? `<span class="parent-note">已經滿 ${MAX_DAILY_FRUITS} 種了，要換的話先按上面的 ✕ 拿掉一種。</span>` : ""}
             ${stale ? `<button class="parent-reuse" id="parent-reuse">↩️ 沿用 ${escapeHtml(state.lastDaily.date.slice(5).replace("-", "/"))} 的設定（${state.lastDaily.items.map((i) => escapeHtml(i.name)).join("、")}）</button>` : ""}
           </div>
 
@@ -1737,7 +1861,7 @@
             <span class="parent-section-title">從清單挑</span>
             <div class="parent-preset-grid">
               ${fruitGroup.extraItems.map((item) => `
-                <button class="parent-preset${draft.some((d) => d.id === item.id) ? " selected" : ""}" data-preset="${item.id}">
+                <button class="parent-preset${draft.some((d) => d.id === item.id) ? " selected" : ""}" data-preset="${item.id}"${full && !draft.some((d) => d.id === item.id) ? " disabled" : ""}>
                   ${renderEmoji(item.emoji, "parent-preset-emoji")}
                   <span class="parent-preset-name">${escapeHtml(item.name)}</span>
                   <span class="parent-preset-price">${item.price} 元</span>
@@ -1751,10 +1875,10 @@
               ${FRUIT_EMOJI_PALETTE.map((e, idx) => `<button class="parent-emoji${idx === 0 ? " selected" : ""}" data-emoji="${e}">${renderEmoji(e, "parent-emoji-img")}</button>`).join("")}
             </div>
             <div class="parent-custom-row">
-              <input class="parent-input" id="parent-name" type="text" placeholder="水果名稱，例如 芭樂" maxlength="8" />
-              <input class="parent-input parent-input-price" id="parent-price" type="number" value="20" min="0" max="200" step="5" />
+              <input class="parent-input" id="parent-name" type="text" placeholder="水果名稱，例如 芭樂" maxlength="8"${full ? " disabled" : ""} />
+              <input class="parent-input parent-input-price" id="parent-price" type="number" value="20" min="0" max="200" step="5"${full ? " disabled" : ""} />
               <span class="parent-unit">元</span>
-              <button class="parent-add" id="parent-add">加入</button>
+              <button class="parent-add" id="parent-add"${full ? " disabled" : ""}>加入</button>
             </div>
           </div>
 
@@ -1783,7 +1907,8 @@
         btn.addEventListener("click", () => {
           const item = fruitGroup.extraItems.find((i) => i.id === btn.dataset.preset);
           const at = draft.findIndex((d) => d.id === item.id);
-          if (at >= 0) draft.splice(at, 1); else draft.push({ ...item });
+          if (at >= 0) draft.splice(at, 1);
+          else if (draft.length < MAX_DAILY_FRUITS) draft.push({ ...item });
           renderParentPanel();
         });
       });
@@ -1804,6 +1929,7 @@
       });
 
       overlay.querySelector("#parent-add").addEventListener("click", () => {
+        if (draft.length >= MAX_DAILY_FRUITS) return;
         const nameInput = overlay.querySelector("#parent-name");
         const name = nameInput.value.trim();
         if (!name) { nameInput.focus(); return; }
@@ -1818,7 +1944,7 @@
 
       if (stale) {
         overlay.querySelector("#parent-reuse").addEventListener("click", () => {
-          state.parentDraft = state.lastDaily.items.map((i) => ({ ...i }));
+          state.parentDraft = state.lastDaily.items.slice(0, MAX_DAILY_FRUITS).map((i) => ({ ...i }));
           renderParentPanel();
         });
       }
@@ -1839,9 +1965,11 @@
         state.lastDaily = { date: todayKey(), items: state.dailySpecials };
         state.allowDelete = state.parentDraftAllowDelete;
         saveAllowDelete(state.allowDelete);
-        // 特選被拿掉時，小孩原本選的那一樣要一起清掉，否則會送出畫面上已經看不到的品項。
-        const fruitPicked = state.selected.fruit;
-        if (fruitPicked && !groupItems(fruitGroup).some((i) => i.id === fruitPicked)) delete state.selected.fruit;
+        // 特選被拿掉時，小孩原本選的那幾樣要一起清掉，否則會送出畫面上已經看不到的品項。
+        const stillOnMenu = groupItems(fruitGroup);
+        const keptFruit = (state.selected.fruit || []).filter((id) => stillOnMenu.some((i) => i.id === id));
+        if (keptFruit.length > 0) state.selected.fruit = keptFruit;
+        else delete state.selected.fruit;
         closeParentPanel();
         render();
       });
@@ -1866,8 +1994,9 @@
     }
 
     // 名稱加注音：每個字右邊直排一個注音，跟課本的排版一樣。
-    // 不用 <ruby>，因為 bopomofo 需要的 ruby-position:inter-character 各家瀏覽器支援不一致，
-    // 改用 flex + writing-mode:vertical-rl 自己排，行為才會到處都一樣。
+    // 不用 <ruby>，因為 bopomofo 需要的 ruby-position:inter-character 各家瀏覽器支援不一致；
+    // 也不用 writing-mode:vertical-rl（iPad Safari 會把符號疊在一起，見 .zh-base 的註解），
+    // 改成一個符號包一個 span、用 flex 直向疊起來，行為才會到處都一樣。
     // 家長自己輸入的水果沒有注音資料，就退回只顯示文字。
     // 課本的直排注音，聲調不是接在注音柱最後面，而是另外擺：
     // 二三四聲放在注音柱「右邊、對齊最後一個符號」，輕聲的點放在注音柱「正上方」。
@@ -1891,7 +2020,7 @@
         <span class="zh-char">
           <span class="zh-han">${escapeHtml(c)}</span>
           <span class="zh-yin${mods}">
-            <span class="zh-base">${escapeHtml(base)}</span>
+            <span class="zh-base">${Array.from(base).map((y) => `<span class="zh-sym">${escapeHtml(y)}</span>`).join("")}</span>
             ${tone ? `<span class="zh-tone${neutral ? " is-neutral" : ""}">${tone}</span>` : ""}
           </span>
         </span>`;
