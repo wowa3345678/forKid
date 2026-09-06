@@ -1323,6 +1323,32 @@
           <path d="M6 24.5h24v1.6H6z" fill="#EFE3CE" />
           <rect x="3.6" y="26.1" width="28.8" height="6.3" rx="2.2" fill="#E0A96D" />
           <rect x="3.6" y="28.4" width="28.8" height="1.7" fill="#C68F52" opacity=".5" />
+        </svg>`,
+      // 🫐 只有藍莓、看不出是優格，小孩會以為是一把藍莓。這裡畫成「插著藍莓的優格杯」：
+      // 杯身 + 紫色標籤讓它一眼跟牛奶杯區分開，白色杯口是優格面，三顆藍莓半埋在上面。
+      // 一樣照 Twemoji 的畫法：36x36 網格、純色平面、不描邊。
+      yogurt: `
+        <svg class="{{cls}}" viewBox="0 0 36 36" role="img" aria-label="藍莓優格">
+          <defs>
+            <clipPath id="yogurt-cup-clip">
+              <path d="M4.6 15.6h26.8l-2.4 15.6c-.3 1.8-1.8 3.1-3.6 3.1H10.6c-1.8 0-3.3-1.3-3.6-3.1z" />
+            </clipPath>
+          </defs>
+          <path d="M4.6 15.6h26.8l-2.4 15.6c-.3 1.8-1.8 3.1-3.6 3.1H10.6c-1.8 0-3.3-1.3-3.6-3.1z" fill="#F2EFE7" />
+          <!-- 暗面跟標籤都切在杯身輪廓內，杯子是上寬下窄的，自己算斜邊會對不齊杯緣。 -->
+          <g clip-path="url(#yogurt-cup-clip)">
+            <rect x="26.6" y="14" width="8" height="22" fill="#DBD5C6" />
+            <rect x="2" y="21.4" width="32" height="6.4" fill="#7E57C2" />
+            <rect x="26.6" y="21.4" width="8" height="6.4" fill="#6A46AB" />
+          </g>
+          <ellipse cx="18" cy="15.6" rx="13.4" ry="3.9" fill="#FFFFFF" />
+          <ellipse cx="18" cy="15" rx="11" ry="2.8" fill="#F6F1E6" />
+          <circle cx="12.2" cy="12.2" r="3.6" fill="#4E5CB4" />
+          <circle cx="24.2" cy="12.7" r="3.5" fill="#4E5CB4" />
+          <circle cx="18.5" cy="10.2" r="3.9" fill="#6673C8" />
+          <circle cx="11" cy="10.9" r="1.2" fill="#9AA3E0" />
+          <circle cx="23" cy="11.4" r="1.1" fill="#9AA3E0" />
+          <circle cx="17.1" cy="8.7" r="1.3" fill="#B0B8E8" />
         </svg>`
     };
 
@@ -1342,10 +1368,11 @@
         items: [
           { id: "egg-crepe", name: "蛋餅", emoji: "🫓", price: 25, zhuyin: ["ㄉㄢˋ", "ㄅㄧㄥˇ"] },
           { id: "sweet-potato", name: "地瓜", emoji: "🍠", price: 20, zhuyin: ["ㄉㄧˋ", "ㄍㄨㄚ"] },
+          // 玉米是全穀雜糧類、不是蔬菜，所以歸在主食 —— 這點大人也常搞錯，剛好可以教。
+          { id: "corn", name: "玉米", emoji: "🌽", price: 20, zhuyin: ["ㄩˋ", "ㄇㄧˇ"] },
           { id: "cucumber", name: "小黃瓜", emoji: "🥒", price: 10, zhuyin: ["ㄒㄧㄠˇ", "ㄏㄨㄤˊ", "ㄍㄨㄚ"] },
           { id: "banana-pancake", name: "香蕉煎餅", emoji: "🥞", price: 30, zhuyin: ["ㄒㄧㄤ", "ㄐㄧㄠ", "ㄐㄧㄢ", "ㄅㄧㄥˇ"] },
-          { id: "mantou", name: "小饅頭", emoji: "🍞", icon: "mantou", price: 15, zhuyin: ["ㄒㄧㄠˇ", "ㄇㄢˊ", "˙ㄊㄡ"] },
-          { id: "blueberry-yogurt", name: "藍莓優格", emoji: "🫐", price: 35, zhuyin: ["ㄌㄢˊ", "ㄇㄟˊ", "ㄧㄡ", "ㄍㄜˊ"] }
+          { id: "mantou", name: "小饅頭", emoji: "🍞", icon: "mantou", price: 15, zhuyin: ["ㄒㄧㄠˇ", "ㄇㄢˊ", "˙ㄊㄡ"] }
         ]
       },
       {
@@ -1359,6 +1386,8 @@
           { id: "boiled-egg", name: "水煮蛋", emoji: "🥚", price: 10, zhuyin: ["ㄕㄨㄟˇ", "ㄓㄨˇ", "ㄉㄢˋ"] },
           { id: "fried-egg", name: "荷包蛋", emoji: "🍳", price: 15, zhuyin: ["ㄏㄜˊ", "ㄅㄠ", "ㄉㄢˋ"] },
           { id: "cheese", name: "起司", emoji: "🧀", price: 15, zhuyin: ["ㄑㄧˇ", "ㄙ"] },
+          // 優格是乳品，跟起司同一類，所以排在起司旁邊而不是留在主食。
+          { id: "blueberry-yogurt", name: "藍莓優格", emoji: "🫐", icon: "yogurt", price: 35, zhuyin: ["ㄌㄢˊ", "ㄇㄟˊ", "ㄧㄡ", "ㄍㄜˊ"] },
           { id: "edamame", name: "毛豆", emoji: "🫛", price: 15, zhuyin: ["ㄇㄠˊ", "ㄉㄡˋ"] }
         ]
       },
