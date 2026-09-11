@@ -136,6 +136,8 @@
 
     .bo-group.accent-main { border-color: #fde68a; }
     .bo-group.accent-protein { border-color: #fecdd3; }
+    /* 蔬菜用飽和一點的正綠，跟水果那圈偏黃的萊姆綠分得開。 */
+    .bo-group.accent-veggie { border-color: #86efac; }
     .bo-group.accent-fruit { border-color: #d9f99d; }
     .bo-group.accent-drink { border-color: #a5f3fc; }
 
@@ -160,6 +162,7 @@
 
     .bo-group.accent-main .bo-group-icon { border-color: #fbbf24; background: #fffbeb; }
     .bo-group.accent-protein .bo-group-icon { border-color: #fb7185; background: #fff1f2; }
+    .bo-group.accent-veggie .bo-group-icon { border-color: #22c55e; background: #f0fdf4; }
     .bo-group.accent-fruit .bo-group-icon { border-color: #a3e635; background: #f7fee7; }
     .bo-group.accent-drink .bo-group-icon { border-color: #4dd0e1; background: #ecfeff; }
 
@@ -508,9 +511,8 @@
       gap: 8px;
     }
 
-    /* 第一格（主食）獨佔上排，因為它的選項最多（6 樣）；
-       蛋白質、水果分下排。這條規則假設食物類別剛好 3 類、而且選項最多的排在第一個。 */
-    .plate-cell:first-child { grid-column: 1 / -1; }
+    /* 食物四類（主食／蛋白質／蔬菜／水果）排成 2x2，每格一樣寬。
+       多了蔬菜之後就不再讓主食獨佔上排了 —— 4 格分兩排剛好，留一格獨佔反而會多擠出一排。 */
 
     .plate-cell {
       /* 高度寫死成「折成兩排也放得下」的高度：不管這格是空的、1 樣還是 6 樣，
@@ -600,11 +602,6 @@
     .plate-cell.count-4 .plate-cell-items { grid-template-columns: repeat(2, 1fr); }
     .plate-cell.count-5 .plate-cell-items { grid-template-columns: repeat(3, 1fr); }
     .plate-cell.count-6 .plate-cell-items { grid-template-columns: repeat(3, 1fr); }
-
-    /* 主食格是整排寬，同樣的樣數排得下更多欄，不用折行。 */
-    .plate-cell:first-child.count-4 .plate-cell-items { grid-template-columns: repeat(4, 1fr); }
-    .plate-cell:first-child.count-5 .plate-cell-items { grid-template-columns: repeat(5, 1fr); }
-    .plate-cell:first-child.count-6 .plate-cell-items { grid-template-columns: repeat(6, 1fr); }
 
     .plate-cell.count-1 .plate-emoji { width: 44px; height: 44px; }
     .plate-cell.count-1 .plate-name { font-size: 13px; }
@@ -1352,10 +1349,11 @@
         </svg>`
     };
 
-    // 菜單：四個類別，每類最多點 1 樣、也可以不點。價格用 5 的倍數，方便小孩自己加總。
+    // 菜單：五個類別，食物類想點幾樣都可以（multi:true）、飲料只能一杯，每一類也都可以不點。
+    // 價格用 5 的倍數，方便小孩自己加總。
     // 台式早餐有些品項沒有專屬 emoji：蛋餅用 🫓（薄餅）、無糖豆漿用 🫘（豆子）形狀最接近；
     // 小饅頭沒有堪用的替代品，改用上面 CUSTOM_ICONS 的自畫圖示（emoji 欄位保留 🍞 當載不到時的最後退路）。
-    // 水果種類太多，全部攤開會讓那一區長得比其他三區都長，所以設 daily:3 —— 只上架「今日特選」3 種，
+    // 水果種類太多，全部攤開會讓那一區長得比其他區都長，所以設 daily:3 —— 只上架「今日特選」3 種，
     // 每天自動換一批（挑法見 pickDailyItems）。要調整每天上幾種只要改 daily 的數字。
     const BREAKFAST_MENU = [
       {
@@ -1368,9 +1366,7 @@
         items: [
           { id: "egg-crepe", name: "蛋餅", emoji: "🫓", price: 25, zhuyin: ["ㄉㄢˋ", "ㄅㄧㄥˇ"] },
           { id: "sweet-potato", name: "地瓜", emoji: "🍠", price: 20, zhuyin: ["ㄉㄧˋ", "ㄍㄨㄚ"] },
-          // 玉米是全穀雜糧類、不是蔬菜，所以歸在主食 —— 這點大人也常搞錯，剛好可以教。
-          { id: "corn", name: "玉米", emoji: "🌽", price: 20, zhuyin: ["ㄩˋ", "ㄇㄧˇ"] },
-          { id: "cucumber", name: "小黃瓜", emoji: "🥒", price: 10, zhuyin: ["ㄒㄧㄠˇ", "ㄏㄨㄤˊ", "ㄍㄨㄚ"] },
+          { id: "rice-ball", name: "小飯糰", emoji: "🍙", price: 25, zhuyin: ["ㄒㄧㄠˇ", "ㄈㄢˋ", "ㄊㄨㄢˊ"] },
           { id: "banana-pancake", name: "香蕉煎餅", emoji: "🥞", price: 30, zhuyin: ["ㄒㄧㄤ", "ㄐㄧㄠ", "ㄐㄧㄢ", "ㄅㄧㄥˇ"] },
           { id: "mantou", name: "小饅頭", emoji: "🍞", icon: "mantou", price: 15, zhuyin: ["ㄒㄧㄠˇ", "ㄇㄢˊ", "˙ㄊㄡ"] }
         ]
@@ -1387,8 +1383,23 @@
           { id: "fried-egg", name: "荷包蛋", emoji: "🍳", price: 15, zhuyin: ["ㄏㄜˊ", "ㄅㄠ", "ㄉㄢˋ"] },
           { id: "cheese", name: "起司", emoji: "🧀", price: 15, zhuyin: ["ㄑㄧˇ", "ㄙ"] },
           // 優格是乳品，跟起司同一類，所以排在起司旁邊而不是留在主食。
-          { id: "blueberry-yogurt", name: "藍莓優格", emoji: "🫐", icon: "yogurt", price: 35, zhuyin: ["ㄌㄢˊ", "ㄇㄟˊ", "ㄧㄡ", "ㄍㄜˊ"] },
-          { id: "edamame", name: "毛豆", emoji: "🫛", price: 15, zhuyin: ["ㄇㄠˊ", "ㄉㄡˋ"] }
+          { id: "blueberry-yogurt", name: "藍莓優格", emoji: "🫐", icon: "yogurt", price: 35, zhuyin: ["ㄌㄢˊ", "ㄇㄟˊ", "ㄧㄡ", "ㄍㄜˊ"] }
+        ]
+      },
+      {
+        // 蔬菜獨立成一類（原本小黃瓜混在主食裡，小孩不會意識到自己有沒有吃到菜）。
+        // 內容是家長指定的：玉米、毛豆、青花菜，另外把主食那邊的小黃瓜也收過來。
+        id: "veggie",
+        label: "蔬菜",
+        multi: true,
+        emoji: "🥬",
+        accent: "veggie",
+        zhuyin: ["ㄕㄨ", "ㄘㄞˋ"],
+        items: [
+          { id: "corn", name: "玉米", emoji: "🌽", price: 20, zhuyin: ["ㄩˋ", "ㄇㄧˇ"] },
+          { id: "edamame", name: "毛豆", emoji: "🫛", price: 15, zhuyin: ["ㄇㄠˊ", "ㄉㄡˋ"] },
+          { id: "broccoli", name: "青花菜", emoji: "🥦", price: 20, zhuyin: ["ㄑㄧㄥ", "ㄏㄨㄚ", "ㄘㄞˋ"] },
+          { id: "cucumber", name: "小黃瓜", emoji: "🥒", price: 10, zhuyin: ["ㄒㄧㄠˇ", "ㄏㄨㄤˊ", "ㄍㄨㄚ"] }
         ]
       },
       {
@@ -1450,7 +1461,7 @@
     const DAILY_KEY = "breakfast:daily-fruits";
 
     // 今日特選的上限。水果區 = 固定的香蕉、蘋果 + 特選，設 4 是為了讓這一區最多 6 樣，
-    // 跟主食區（6 樣）齊高；再多就會讓水果區長得比其他三區都長，也超過小孩一次掃視得完的量。
+    // 再多就會讓水果區長得比其他區都長，也超過小孩一次掃視得完的量。
     const MAX_DAILY_FRUITS = 4;
 
     // 刪除紀錄的開關由家長決定，預設關閉：關著的時候每筆的 ✕ 跟「清除全部紀錄」都不會出現，
@@ -1642,7 +1653,7 @@
         </div>
         <div class="info-banner">
           <span class="info-emoji">👩‍🍳</span>
-          <span>主食、蛋白質、水果想點幾樣都可以，飲料只能選一杯～每一類都可以不點，點好按下面的「送出訂單」！</span>
+          <span>主食、蛋白質、蔬菜、水果想點幾樣都可以，飲料只能選一杯～每一類都可以不點，點好按下面的「送出訂單」！</span>
         </div>
         <div class="order-count">🧺 已點 ${picked.length} 樣</div>
         ${BREAKFAST_MENU.map(renderGroup).join("")}
@@ -1656,7 +1667,7 @@
       `;
     }
 
-    // 餐盤：分格餐盤，食物三類一類一格、飲料進旁邊的杯子，像真的一份早餐。
+    // 餐盤：分格餐盤，食物四類一類一格、飲料進旁邊的杯子，像真的一份早餐。
     // 每格自己標類別名，空格是虛線，所以「哪一類還沒點」看格子就知道，不用另外補提示文字。
     // 只用在點餐畫面（食物會隨著點選一樣一樣出現）；送出後的訂單卡不重複顯示餐盤，
     // 那邊已經有逐項條列跟總金額了，再放一次餐盤只是佔位置。
