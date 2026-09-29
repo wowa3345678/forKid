@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>五線譜小樂園</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    /* 獨立、自給自足的單檔頁面（跟 breakfast.html 一樣）：樣式跟腳本都內嵌，直接用瀏覽器打開就能跑。
+       設計語彙（顏色/圓角/陰影/66px 觸控目標）沿用小一練習網的 design system，主題色用紫色漸層。 */
+    :root {
+      --bg: #fff9f0;
+      --ink: #292524;
+      --ink-soft: #78716c;
+      --ink-faint: #a8a29e;
+      --white: #ffffff;
+      --radius-lg: 28px;
+      --radius-md: 22px;
+      --radius-sm: 16px;
+      --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.08);
+      --purple-grad: linear-gradient(145deg, #ab47bc, #7e57c2);
+      --purple-shadow: rgba(171, 71, 188, 0.35);
+      --orange-grad: linear-gradient(145deg, #ff7043, #ffa726);
+      --orange-shadow: rgba(255, 112, 67, 0.35);
+      --green-grad: linear-gradient(135deg, #22c55e, #4ade80);
+      --green-shadow: rgba(34, 197, 94, 0.4);
+      --progress-grad: linear-gradient(90deg, #ff7043, #fbbf24);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Nunito", "Arial Rounded MT Bold", Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    button { font-family: inherit; }
+    [hidden] { display: none !important; }
+
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px 48px;
+    }
+
+    /* 根容器統一 16px 間距 */
+    #music-root {
+      width: 100%;
+      max-width: 760px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ---------- 標題列 ---------- */
+    .m-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .m-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 28px;
+      font-weight: 900;
+    }
+    .m-title-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
+      background: var(--purple-grad);
+      box-shadow: 0 4px 12px var(--purple-shadow);
+      display: grid;
+      place-items: center;
+      font-size: 26px;
+    }
+    .chip-button {
+      min-height: 48px;
+      padding: 0 16px;
+      border: 3px solid #e7e5e4;
+      border-radius: 999px;
+      background: var(--white);
+      color: var(--ink-soft);
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+    }
+    .chip-button.on { border-color: #ab47bc; color: #7e57c2; background: #faf5ff; }
+
+    /* ---------- 分頁 ---------- */
+    .m-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .m-tab {
+      min-height: 66px;
+      border: 3px solid transparent;
+      border-radius: var(--radius-sm);
+      background: var(--white);
+      box-shadow: var(--shadow-sm);
+      color: var(--ink-soft);
+      font-size: clamp(14px, 3.2vw, 18px);
+      font-weight: 900;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      padding: 6px 4px;
+    }
+    .m-tab .tab-emoji { font-size: 22px; line-height: 1; }
+    .m-tab.active {
+      background: var(--purple-grad);
+      color: #fff;
+      box-shadow: 0 6px 16px var(--purple-shadow);
+    }
+
+    /* ---------- 舞台（每個分頁的內容） ---------- */
+    #stage {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .staff-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: 8px 8px 4px;
+    }
+    .staff-card svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      touch-action: none;
+    }
+    .hint {
+      text-align: center;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--ink-soft);
+      min-height: 28px;
+    }
+    .hint.good { color: #166534; }
+    .hint.bad { color: #991b1b; }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .primary-button, .secondary-button {
+      min-height: 66px;
+      padding: 0 28px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 20px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .primary-button {
+      background: var(--purple-grad);
+      color: #fff;
+      box-shadow: 0 6px 16px var(--purple-shadow);
+    }
+    .secondary-button {
+      background: var(--white);
+      color: #7e57c2;
+      border: 3px solid #d8b4fe;
+      box-shadow: var(--shadow-sm);
+    }
+    .primary-button:active, .secondary-button:active { transform: scale(0.97); }
+
+    /* ---------- 五線譜 SVG ---------- */
+    .staff-line { stroke: #57534e; stroke-width: 2.5; }
+    .bar-line { stroke: #57534e; stroke-width: 2.5; }
+    .bar-line.thick { stroke-width: 7; }
+    .clef { fill: none; stroke: #292524; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+    .clef-dot { fill: #292524; }
+    .note .stem { stroke: #292524; stroke-width: 3; stroke-linecap: round; }
+    .note .ledger { stroke: #57534e; stroke-width: 2.5; }
+    .note { cursor: pointer; }
+    .note .body { transform-box: fill-box; transform-origin: center; }
+    .note.hl .body { animation: notePop 0.42s ease; }
+    .note.hl .head-solid, .note.hl .head-hollow { filter: drop-shadow(0 0 7px rgba(126, 87, 194, 0.95)); }
+    .note .ring { display: none; fill: none; stroke: #ab47bc; stroke-width: 4; stroke-dasharray: 6 5; }
+    .note.target .ring { display: block; animation: ringPulse 0.9s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+    .note-label { font-weight: 900; font-size: 20px; text-anchor: middle; }
+    .big-label { font-weight: 900; font-size: 72px; text-anchor: middle; }
+    .big-sub { font-weight: 800; font-size: 22px; text-anchor: middle; fill: #a8a29e; }
+    .svg-hint { font-weight: 800; font-size: 20px; text-anchor: middle; fill: #a8a29e; }
+
+    @keyframes notePop {
+      0% { transform: scale(1); }
+      35% { transform: scale(1.28); }
+      100% { transform: scale(1); }
+    }
+    @keyframes ringPulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.18); opacity: 0.6; }
+    }
+    @keyframes wrongShake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-7px); }
+      40% { transform: translateX(7px); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(5px); }
+    }
+    @keyframes correctPop {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+    @keyframes slideUp {
+      from { transform: translateY(12px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* ---------- 鍵盤 ---------- */
+    #keys {
+      display: flex;
+      gap: 6px;
+    }
+    .key {
+      flex: 1;
+      min-width: 0;
+      min-height: 120px;
+      padding: 8px 0 12px;
+      border: 2px solid #e7e5e4;
+      border-bottom-width: 12px;
+      border-bottom-color: var(--key-color);
+      border-radius: 6px 6px 16px 16px;
+      background: var(--white);
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 2px;
+      touch-action: manipulation;
+    }
+    .key .k-tag { font-size: 12px; font-weight: 800; color: var(--ink-faint); min-height: 14px; }
+    .key .k-name { font-size: clamp(14px, 3.6vw, 24px); font-weight: 900; color: var(--ink); }
+    .key .k-num { font-size: 14px; font-weight: 800; color: var(--ink-soft); }
+    .key.down, .key:active { transform: translateY(4px); background: #faf5ff; border-bottom-width: 8px; }
+    .key.wrong { animation: wrongShake 0.4s ease; }
+    #keys.mono .key { border-bottom-color: #d6d3d1; }
+
+    /* ---------- 小測驗 ---------- */
+    .progress-wrap { display: flex; flex-direction: column; gap: 6px; }
+    .progress-meta { display: flex; justify-content: space-between; font-size: 16px; font-weight: 800; color: var(--ink-soft); }
+    .progress-track { height: 12px; border-radius: 999px; background: #f5f0e8; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 999px; background: var(--progress-grad); transition: width 0.3s ease; }
+    .quiz-question {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 900;
+    }
+    .option-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .option-button {
+      min-height: 84px;
+      border: 3px solid #e7e5e4;
+      border-radius: var(--radius-sm);
+      background: var(--white);
+      box-shadow: var(--shadow-sm);
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .option-button:disabled { cursor: default; }
+    .option-button.correct { background: #dcfce7; border-color: #22c55e; color: #166534; animation: correctPop 0.4s ease; }
+    .option-button.wrong { background: #fee2e2; border-color: #ef4444; color: #991b1b; animation: wrongShake 0.4s ease; }
+    .feedback-banner {
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 900;
+      background: #fef9c3;
+      color: #c2410c;
+      animation: slideUp 0.3s ease;
+    }
+    .feedback-banner.good { background: #dcfce7; color: #166534; }
+    .result-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: 32px 20px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+    }
+    .result-stars { font-size: 44px; }
+    .result-score { font-size: 40px; font-weight: 900; }
+    .result-sub { font-size: 18px; font-weight: 800; color: var(--ink-soft); }
+
+    @media (max-width: 480px) {
+      .m-title { font-size: 22px; }
+      .m-title-icon { width: 40px; height: 40px; font-size: 22px; }
+      .chip-button { padding: 0 12px; font-size: 14px; }
+      .key { min-height: 96px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="music-root">
+      <div class="m-header">
+        <div class="m-title"><span class="m-title-icon">🎵</span>五線譜小樂園</div>
+        <button class="chip-button on" id="color-toggle" type="button">🎨 彩色音符</button>
+      </div>
+      <nav class="m-tabs" id="tabs"></nav>
+      <div id="stage"></div>
+      <div id="keys"></div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* ================= 資料 ================= */
+      // i = 相對中央 Do 的音高位置（0 = 中央 Do 下加一線，7 = 高音 Do 第三間）
+      var NOTES = [
+        { i: 0, name: 'Do',  num: 1, freq: 261.63, color: '#ef4444', tag: '' },
+        { i: 1, name: 'Re',  num: 2, freq: 293.66, color: '#f97316', tag: '' },
+        { i: 2, name: 'Mi',  num: 3, freq: 329.63, color: '#eab308', tag: '' },
+        { i: 3, name: 'Fa',  num: 4, freq: 349.23, color: '#22c55e', tag: '' },
+        { i: 4, name: 'Sol', num: 5, freq: 392.00, color: '#06b6d4', tag: '' },
+        { i: 5, name: 'La',  num: 6, freq: 440.00, color: '#3b82f6', tag: '' },
+        { i: 6, name: 'Si',  num: 7, freq: 493.88, color: '#a855f7', tag: '' },
+        { i: 7, name: 'Do',  num: 1, freq: 523.25, color: '#ef4444', tag: '高' }
+      ];
+      var NAMES = ['Do', 'Re', 'Mi', 'Fa', 'Sol', 'La', 'Si'];
+
+      // 小星星前四小節：n = 音高位置，b = 拍數（四四拍，每小節四拍）
+      var TWINKLE = [
+        { n: 0, b: 1 }, { n: 0, b: 1 }, { n: 4, b: 1 }, { n: 4, b: 1 },
+        { n: 5, b: 1 }, { n: 5, b: 1 }, { n: 4, b: 2 },
+        { n: 3, b: 1 }, { n: 3, b: 1 }, { n: 2, b: 1 }, { n: 2, b: 1 },
+        { n: 1, b: 1 }, { n: 1, b: 1 }, { n: 0, b: 2 }
+      ];
+      var BEAT_MS = 520;
+
+      var INK = '#292524';
+      var COLOR_KEY = 'forkid:music-colorful';
+
+      /* ================= 狀態 ================= */
+      var state = {
+        tab: 'scale',
+        colorful: true,
+        playN: null,           // 「玩音符」目前的音
+        showNames: true,       // 「小星星」是否顯示唱名
+        songPlaying: false,
+        practice: null,        // { idx } 「我來彈」進行中
+        quiz: null
+      };
+      try {
+        var saved = localStorage.getItem(COLOR_KEY);
+        if (saved !== null) state.colorful = saved === '1';
+      } catch (e) { /* 隱私模式讀不到就用預設 */ }
+
+      var stage = document.getElementById('stage');
+      var tabsEl = document.getElementById('tabs');
+      var keysEl = document.getElementById('keys');
+      var colorBtn = document.getElementById('color-toggle');
+
+      /* ================= 音效（Web Audio 即時合成） ================= */
+      var ctx = null;
+      function audio() {
+        if (!ctx) {
+          var AC = window.AudioContext || window.webkitAudioContext;
+          if (!AC) return null;
+          ctx = new AC();
+        }
+        if (ctx.state === 'suspended') ctx.resume();
+        return ctx;
+      }
+
+      // 疊三個泛音 + 低通濾波，聽起來像柔和的鋼琴/木琴
+      function playFreq(freq, dur) {
+        var c = audio();
+        if (!c) return;
+        dur = dur || 0.9;
+        var t = c.currentTime;
+        var master = c.createGain();
+        master.gain.setValueAtTime(0.0001, t);
+        master.gain.linearRampToValueAtTime(0.4, t + 0.012);
+        master.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        var lp = c.createBiquadFilter();
+        lp.type = 'lowpass';
+        lp.frequency.value = 2800;
+        [['triangle', 1, 1], ['sine', 2, 0.35], ['sine', 3, 0.12]].forEach(function (p) {
+          var o = c.createOscillator();
+          var g = c.createGain();
+          o.type = p[0];
+          o.frequency.value = freq * p[1];
+          g.gain.value = p[2];
+          o.connect(g);
+          g.connect(lp);
+          o.start(t);
+          o.stop(t + dur + 0.05);
+        });
+        lp.connect(master);
+        master.connect(c.destination);
+      }
+      function playNote(n, dur) { playFreq(NOTES[n].freq, dur); }
+      function playWrong() { playFreq(170, 0.35); }
+
+      /* ================= 五線譜繪製 ================= */
+      var E4_Y = 180;      // 第一線（Mi）的 y
+      var HALF = 12;       // 半格（線到間）的高度
+      function pitchY(n) { return E4_Y - (n - 2) * HALF; }
+      function noteColor(n) { return state.colorful ? NOTES[n].color : INK; }
+      function labelColor(n) { return state.colorful ? NOTES[n].color : '#57534e'; }
+
+      function staffLines(x0, x1) {
+        var out = '';
+        [2, 4, 6, 8, 10].forEach(function (i) {
+          var y = pitchY(i);
+          out += '<line class="staff-line" x1="' + x0 + '" x2="' + x1 + '" y1="' + y + '" y2="' + y + '"/>';
+        });
+        return out;
+      }
+
+      // 用描邊畫的高音譜號（不依賴字型，各裝置長相一致）。螺旋中心落在第二線 Sol 上。
+      function trebleClef() {
+        return '<path class="clef" d="' +
+          'M 66 214 C 66 232, 92 234, 90 212 ' +           // 底部小勾
+          'C 88 186, 78 120, 84 78 ' +                      // 直桿往上
+          'C 88 48, 108 46, 106 74 ' +                      // 頂部圈
+          'C 104 100, 58 118, 58 150 ' +                    // 斜下到左側
+          'C 58 180, 104 186, 106 156 ' +                   // 底部大圈
+          'C 108 132, 74 128, 70 150 ' +                    // 回到上方
+          'C 68 164, 88 168, 88 154' +                      // 內圈收尾
+          '"/>' +
+          '<circle class="clef-dot" cx="66" cy="214" r="5.5"/>';
+      }
+
+      // 一顆音符。opts: hollow（二分音符）、id（給小星星逐顆辨識用）
+      function noteSVG(n, x, opts) {
+        opts = opts || {};
+        var y = pitchY(n);
+        var up = n < 6;
+        var col = noteColor(n);
+        var stem = up
+          ? '<line class="stem" x1="12.5" y1="-3" x2="12.5" y2="-80"/>'
+          : '<line class="stem" x1="-12.5" y1="3" x2="-12.5" y2="80"/>';
+        var head;
+        if (opts.hollow) {
+          head = '<ellipse rx="13.5" ry="9.5" transform="rotate(-20)" fill="#fff" stroke="' + INK + '" stroke-width="4" class="head-hollow"/>' +
+                 (state.colorful ? '<ellipse rx="8" ry="4.5" transform="rotate(-20)" fill="' + col + '" opacity=".85"/>' : '');
+        } else {
+          head = '<ellipse rx="13.5" ry="9.5" transform="rotate(-20)" fill="' + col + '" stroke="' + INK + '" stroke-width="2.5" class="head-solid"/>';
+        }
+        return '<g class="note" data-n="' + n + '" data-id="' + (opts.id === undefined ? '' : opts.id) + '" transform="translate(' + x + ',' + y + ')">' +
+          '<g class="body">' +
+            (n === 0 ? '<line class="ledger" x1="-23" x2="23" y1="0" y2="0"/>' : '') +
+            stem + head +
+          '</g>' +
+          '<circle class="ring" r="26"/>' +
+          '<circle r="28" fill="transparent"/>' +
+        '</g>';
+      }
+
+      function labelSVG(n, x, y, size) {
+        return '<text class="note-label" x="' + x + '" y="' + y + '"' + (size ? ' font-size="' + size + '"' : '') + ' fill="' + labelColor(n) + '">' + NOTES[n].name + '</text>';
+      }
+
+      function staffSVG(inner, attrs) {
+        return '<div class="staff-card"><svg viewBox="0 30 720 225" ' + (attrs || '') + ' xmlns="http://www.w3.org/2000/svg">' + inner + '</svg></div>';
+      }
+
+      function flashEl(el) {
+        if (!el) return;
+        el.classList.remove('hl');
+        void el.getBoundingClientRect();
+        el.classList.add('hl');
+        setTimeout(function () { el.classList.remove('hl'); }, 450);
+      }
+
+      /* ================= 鍵盤 ================= */
+      function buildKeys() {
+        keysEl.innerHTML = NOTES.map(function (nt, n) {
+          return '<button class="key" type="button" data-n="' + n + '" style="--key-color:' + nt.color + '">' +
+            '<span class="k-tag">' + (nt.tag ? nt.tag + '音' : '') + '</span>' +
+            '<span class="k-name">' + nt.name + '</span>' +
+            '<span class="k-num">' + nt.num + '</span>' +
+          '</button>';
+        }).join('');
+        keysEl.classList.toggle('mono', !state.colorful);
+      }
+      function keyEl(n) { return keysEl.querySelector('.key[data-n="' + n + '"]'); }
+      function flashKey(n) {
+        var k = keyEl(n);
+        if (!k) return;
+        k.classList.add('down');
+        setTimeout(function () { k.classList.remove('down'); }, 160);
+      }
+
+      keysEl.addEventListener('pointerdown', function (e) {
+        var k = e.target.closest('.key');
+        if (!k) return;
+        e.preventDefault();
+        pressPitch(Number(k.dataset.n));
+      });
+
+      // 按下某個音高（從鍵盤或點音符）→ 各分頁各自反應
+      function pressPitch(n) {
+        if (state.tab === 'song' && state.practice) { practiceHit(n); return; }
+        playNote(n);
+        flashKey(n);
+        if (state.tab === 'scale') {
+          flashEl(stage.querySelector('.note[data-n="' + n + '"]'));
+        } else if (state.tab === 'play') {
+          setPlayNote(n, false);
+        }
+      }
+
+      /* ================= 分頁 ================= */
+      var TABS = [
+        { id: 'scale', emoji: '🎼', label: '認識音階' },
+        { id: 'play',  emoji: '👆', label: '玩音符' },
+        { id: 'song',  emoji: '⭐', label: '小星星' },
+        { id: 'quiz',  emoji: '🎯', label: '小測驗' }
+      ];
+      function renderTabs() {
+        tabsEl.innerHTML = TABS.map(function (t) {
+          return '<button class="m-tab' + (t.id === state.tab ? ' active' : '') + '" type="button" data-tab="' + t.id + '">' +
+            '<span class="tab-emoji">' + t.emoji + '</span>' + t.label + '</button>';
+        }).join('');
+      }
+      tabsEl.addEventListener('click', function (e) {
+        var b = e.target.closest('.m-tab');
+        if (!b) return;
+        switchTab(b.dataset.tab);
+      });
+
+      function stopEverything() {
+        songTimers.forEach(clearTimeout);
+        songTimers = [];
+        scaleTimers.forEach(clearTimeout);
+        scaleTimers = [];
+        state.songPlaying = false;
+        state.practice = null;
+      }
+
+      function switchTab(id) {
+        stopEverything();
+        state.tab = id;
+        if (id === 'quiz') state.quiz = newQuiz();
+        renderTabs();
+        render();
+      }
+
+      colorBtn.addEventListener('click', function () {
+        state.colorful = !state.colorful;
+        try { localStorage.setItem(COLOR_KEY, state.colorful ? '1' : '0'); } catch (e) { /* ignore */ }
+        colorBtn.classList.toggle('on', state.colorful);
+        keysEl.classList.toggle('mono', !state.colorful);
+        render();
+      });
+
+      function render() {
+        colorBtn.hidden = state.tab === 'quiz';   // 測驗時色彩會洩漏答案，固定黑白
+        keysEl.hidden = state.tab === 'quiz';
+        if (state.tab === 'scale') renderScale();
+        else if (state.tab === 'play') renderPlay();
+        else if (state.tab === 'song') renderSong();
+        else renderQuiz();
+      }
+
+      /* ---------- 認識音階 ---------- */
+      var scaleTimers = [];
+      var SCALE_X0 = 150, SCALE_DX = 74;
+      function scaleX(k) { return SCALE_X0 + k * SCALE_DX; }
+
+      function renderScale() {
+        var inner = staffLines(20, 700) + trebleClef();
+        NOTES.forEach(function (nt, n) {
+          inner += noteSVG(n, scaleX(n)) + labelSVG(n, scaleX(n), 240);
+        });
+        stage.innerHTML =
+          staffSVG(inner) +
+          '<div class="hint">點點看每個音符，聽聽它的聲音：越往上，聲音越高！</div>' +
+          '<div class="action-row">' +
+            '<button class="primary-button" type="button" id="scale-up">▶ 往上唱</button>' +
+            '<button class="secondary-button" type="button" id="scale-down">▶ 往下唱</button>' +
+          '</div>';
+        stage.querySelector('svg').addEventListener('pointerdown', function (e) {
+          var g = e.target.closest('.note');
+          if (!g) return;
+          e.preventDefault();
+          pressPitch(Number(g.dataset.n));
+        });
+        document.getElementById('scale-up').addEventListener('click', function () { playScale(false); });
+        document.getElementById('scale-down').addEventListener('click', function () { playScale(true); });
+      }
+
+      function playScale(down) {
+        scaleTimers.forEach(clearTimeout);
+        scaleTimers = [];
+        var order = NOTES.map(function (_, n) { return n; });
+        if (down) order.reverse();
+        order.forEach(function (n, k) {
+          scaleTimers.push(setTimeout(function () {
+            playNote(n, 0.6);
+            flashKey(n);
+            flashEl(stage.querySelector('.note[data-n="' + n + '"]'));
+          }, k * 480));
+        });
+      }
+
+      /* ---------- 玩音符：手指/Pencil 在五線譜上上下滑動 ---------- */
+      function renderPlay() {
+        stage.innerHTML =
+          staffSVG(staffLines(20, 700) + trebleClef() + '<g id="play-layer"></g>', 'id="play-svg"') +
+          '<div class="hint" id="play-hint">在五線譜上點一下、或上下滑動，看看音符怎麼住在線上和格子裡</div>';
+        drawPlayLayer();
+        var svg = document.getElementById('play-svg');
+        var dragging = false;
+        function move(e) {
+          var r = svg.getBoundingClientRect();
+          var vb = svg.viewBox.baseVal;
+          var y = vb.y + (e.clientY - r.top) * vb.height / r.height;
+          var n = Math.round(2 + (E4_Y - y) / HALF);
+          n = Math.max(0, Math.min(7, n));
+          if (n !== state.playN || !dragging) {
+            if (n !== state.playN) setPlayNote(n, true);
+          }
+        }
+        svg.addEventListener('pointerdown', function (e) {
+          e.preventDefault();
+          dragging = true;
+          svg.setPointerCapture(e.pointerId);
+          var r = svg.getBoundingClientRect();
+          var vb = svg.viewBox.baseVal;
+          var y = vb.y + (e.clientY - r.top) * vb.height / r.height;
+          var n = Math.max(0, Math.min(7, Math.round(2 + (E4_Y - y) / HALF)));
+          setPlayNote(n, true);   // 按下時就算同一個音也要響
+        });
+        svg.addEventListener('pointermove', function (e) { if (dragging) move(e); });
+        svg.addEventListener('pointerup', function () { dragging = false; });
+        svg.addEventListener('pointercancel', function () { dragging = false; });
+      }
+
+      function drawPlayLayer() {
+        var layer = document.getElementById('play-layer');
+        if (!layer) return;
+        if (state.playN === null) {
+          layer.innerHTML = '<text class="svg-hint" x="380" y="150">👆 手指放這裡試試看</text>';
+          return;
+        }
+        var n = state.playN;
+        var nt = NOTES[n];
+        layer.innerHTML =
+          noteSVG(n, 300) +
+          '<text class="big-label" x="560" y="150" fill="' + labelColor(n) + '">' + nt.name + '</text>' +
+          '<text class="big-sub" x="560" y="186">' + (nt.tag ? '高音 ' : '') + nt.num + '</text>';
+      }
+
+      function setPlayNote(n, fromStaff) {
+        state.playN = n;
+        playNote(n);
+        flashKey(n);
+        drawPlayLayer();
+        flashEl(stage.querySelector('#play-layer .note'));
+        var hint = document.getElementById('play-hint');
+        if (hint) {
+          var onLine = n % 2 === 0;
+          hint.textContent = n === 0
+            ? 'Do 在最下面，要多加一條小短線來坐！'
+            : (onLine ? '這個音符穿在「線」上' : '這個音符住在「格子」裡');
+        }
+      }
+
+      /* ---------- 小星星 ---------- */
+      var songTimers = [];
+      var BAR_X0 = 112, BAR_W = 150, BEAT_W = 36;
+      function songLayout() {
+        var beat = 0;
+        return TWINKLE.map(function (nt, k) {
+          var bar = Math.floor(beat / 4);
+          var x = BAR_X0 + bar * BAR_W + 24 + (beat % 4) * BEAT_W;
+          var out = { n: nt.n, b: nt.b, x: x, beat: beat, k: k };
+          beat += nt.b;
+          return out;
+        });
+      }
+
+      function renderSong() {
+        var inner = staffLines(20, 700) + trebleClef();
+        // 小節線與終止線
+        for (var b = 1; b <= 3; b++) {
+          var bx = BAR_X0 + b * BAR_W;
+          inner += '<line class="bar-line" x1="' + bx + '" x2="' + bx + '" y1="' + pitchY(10) + '" y2="' + pitchY(2) + '"/>';
+        }
+        var endX = BAR_X0 + 4 * BAR_W;
+        inner += '<line class="bar-line" x1="' + (endX - 9) + '" x2="' + (endX - 9) + '" y1="' + pitchY(10) + '" y2="' + pitchY(2) + '"/>';
+        inner += '<line class="bar-line thick" x1="' + (endX - 2) + '" x2="' + (endX - 2) + '" y1="' + pitchY(10) + '" y2="' + pitchY(2) + '"/>';
+        songLayout().forEach(function (s) {
+          inner += noteSVG(s.n, s.x, { id: s.k, hollow: s.b === 2 });
+          if (state.showNames) inner += labelSVG(s.n, s.x, 246, 17);
+        });
+        stage.innerHTML =
+          staffSVG(inner) +
+          '<div class="hint" id="song-msg">' + songHint() + '</div>' +
+          '<div class="action-row">' +
+            '<button class="primary-button" type="button" id="song-play">' + (state.songPlaying ? '⏹ 停止' : '▶ 聽一聽') + '</button>' +
+            '<button class="secondary-button" type="button" id="song-practice">' + (state.practice ? '↺ 重來' : '🎯 我來彈') + '</button>' +
+            '<button class="chip-button' + (state.showNames ? ' on' : '') + '" type="button" id="song-names">🔤 唱名</button>' +
+          '</div>';
+        stage.querySelector('svg').addEventListener('pointerdown', function (e) {
+          var g = e.target.closest('.note');
+          if (!g) return;
+          e.preventDefault();
+          pressPitch(Number(g.dataset.n));
+        });
+        document.getElementById('song-play').addEventListener('click', toggleSongPlay);
+        document.getElementById('song-practice').addEventListener('click', startPractice);
+        document.getElementById('song-names').addEventListener('click', function () {
+          state.showNames = !state.showNames;
+          renderSong();
+        });
+        if (state.practice) markTarget();
+      }
+
+      function songHint() {
+        if (state.practice) return '輪到有虛線圈圈的音符，按下面對的鍵！';
+        return '空心的音符（二分音符）要拉長兩拍喔';
+      }
+      function setSongMsg(text, cls) {
+        var m = document.getElementById('song-msg');
+        if (!m) return;
+        m.textContent = text;
+        m.className = 'hint' + (cls ? ' ' + cls : '');
+      }
+      function songNoteEl(k) { return stage.querySelector('.note[data-id="' + k + '"]'); }
+
+      function toggleSongPlay() {
+        if (state.songPlaying) {
+          stopEverything();
+          renderSong();
+          return;
+        }
+        stopEverything();
+        state.songPlaying = true;
+        var t = 0;
+        TWINKLE.forEach(function (nt, k) {
+          songTimers.push(setTimeout(function () {
+            playNote(nt.n, nt.b * BEAT_MS / 1000 + 0.35);
+            flashKey(nt.n);
+            flashEl(songNoteEl(k));
+          }, t * BEAT_MS));
+          t += nt.b;
+        });
+        songTimers.push(setTimeout(function () {
+          state.songPlaying = false;
+          if (state.tab === 'song') renderSong();
+        }, t * BEAT_MS + 300));
+        renderSong();
+      }
+
+      function startPractice() {
+        stopEverything();
+        state.practice = { idx: 0 };
+        renderSong();
+      }
+      function markTarget() {
+        stage.querySelectorAll('.note.target').forEach(function (g) { g.classList.remove('target'); });
+        if (!state.practice) return;
+        var g = songNoteEl(state.practice.idx);
+        if (g) g.classList.add('target');
+      }
+      function practiceHit(n) {
+        var p = state.practice;
+        var want = TWINKLE[p.idx].n;
+        if (n !== want) {
+          playWrong();
+          var k = keyEl(n);
+          if (k) {
+            k.classList.remove('wrong');
+            void k.offsetWidth;
+            k.classList.add('wrong');
+          }
+          setSongMsg('再找找看，圈圈在哪一條線／哪一格？', 'bad');
+          return;
+        }
+        playNote(n, TWINKLE[p.idx].b * BEAT_MS / 1000 + 0.3);
+        flashKey(n);
+        flashEl(songNoteEl(p.idx));
+        p.idx += 1;
+        if (p.idx >= TWINKLE.length) {
+          state.practice = null;
+          renderSong();
+          setSongMsg('🎉 太棒了！你把小星星彈完了！', 'good');
+          return;
+        }
+        markTarget();
+        setSongMsg('答對了！下一個～', 'good');
+      }
+
+      /* ---------- 小測驗 ---------- */
+      var QUIZ_TOTAL = 10;
+      function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+      function shuffle(arr) {
+        var a = arr.slice();
+        for (var i = a.length - 1; i > 0; i--) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var t = a[i]; a[i] = a[j]; a[j] = t;
+        }
+        return a;
+      }
+      function newQuiz() {
+        return { idx: 0, score: 0, cur: null, answered: false, done: false, last: -1 };
+      }
+      function nextQuestion(q) {
+        var n;
+        do { n = Math.floor(Math.random() * 8); } while (n === q.last);
+        q.last = n;
+        var correct = NOTES[n].name;
+        var others = shuffle(NAMES.filter(function (x) { return x !== correct; })).slice(0, 3);
+        q.cur = { n: n, correct: correct, options: shuffle(others.concat([correct])), picked: null };
+        q.answered = false;
+      }
+
+      function renderQuiz() {
+        var q = state.quiz;
+        if (q.done) { renderQuizResult(q); return; }
+        if (!q.cur) nextQuestion(q);
+        var c = q.cur;
+        var pct = Math.round((q.idx / QUIZ_TOTAL) * 100);
+        var saveColor = state.colorful;
+        state.colorful = false;   // 測驗固定黑白
+        var inner = staffLines(20, 700) + trebleClef() + noteSVG(c.n, 400);
+        state.colorful = saveColor;
+
+        var opts = c.options.map(function (name) {
+          var cls = 'option-button';
+          if (q.answered) {
+            if (name === c.correct) cls += ' correct';
+            else if (name === c.picked) cls += ' wrong';
+          }
+          return '<button class="' + cls + '" type="button" data-name="' + name + '"' + (q.answered ? ' disabled' : '') + '>' + name + '</button>';
+        }).join('');
+
+        var feedback = '';
+        if (q.answered) {
+          feedback = c.picked === c.correct
+            ? '<div class="feedback-banner good">✨ 答對了！這是 ' + c.correct + '</div>'
+            : '<div class="feedback-banner">正確答案是 <b>' + c.correct + '</b>，記起來囉！</div>';
+        }
+
+        stage.innerHTML =
+          '<div class="progress-wrap">' +
+            '<div class="progress-meta"><span>第 ' + (q.idx + 1) + ' / ' + QUIZ_TOTAL + ' 題</span><span>⭐ ' + q.score + '</span></div>' +
+            '<div class="progress-track"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
+          '</div>' +
+          '<div class="quiz-question">這個音符唱什麼？</div>' +
+          staffSVG(inner) +
+          feedback +
+          '<div class="option-grid">' + opts + '</div>' +
+          (q.answered
+            ? '<div class="action-row"><button class="primary-button" type="button" id="quiz-next">' + (q.idx + 1 >= QUIZ_TOTAL ? '看成績' : '下一題 ➜') + '</button></div>'
+            : '');
+
+        stage.querySelectorAll('.option-button').forEach(function (b) {
+          b.addEventListener('click', function () { answerQuiz(b.dataset.name); });
+        });
+        var next = document.getElementById('quiz-next');
+        if (next) next.addEventListener('click', function () {
+          q.idx += 1;
+          if (q.idx >= QUIZ_TOTAL) q.done = true; else nextQuestion(q);
+          renderQuiz();
+        });
+      }
+
+      function answerQuiz(name) {
+        var q = state.quiz;
+        if (q.answered) return;
+        var c = q.cur;
+        q.answered = true;
+        c.picked = name;
+        if (name === c.correct) {
+          q.score += 1;
+          playNote(c.n, 1);
+        } else {
+          playWrong();
+          setTimeout(function () { playNote(c.n, 1); }, 450);   // 揭曉後唱一次正確的音
+        }
+        renderQuiz();
+      }
+
+      function renderQuizResult(q) {
+        var stars = q.score >= 9 ? '🌟🌟🌟' : q.score >= 6 ? '🌟🌟' : '🌟';
+        stage.innerHTML =
+          '<div class="result-card">' +
+            '<div class="result-stars">' + stars + '</div>' +
+            '<div class="result-score">' + q.score + ' / ' + QUIZ_TOTAL + '</div>' +
+            '<div class="result-sub">' + (q.score >= 9 ? '你是小小音樂家！' : q.score >= 6 ? '很棒喔，再練習就更厲害了！' : '多看看「認識音階」再來挑戰吧！') + '</div>' +
+            '<button class="primary-button" type="button" id="quiz-again">再玩一次</button>' +
+          '</div>';
+        document.getElementById('quiz-again').addEventListener('click', function () {
+          state.quiz = newQuiz();
+          renderQuiz();
+        });
+      }
+
+      /* ================= 啟動 ================= */
+      colorBtn.classList.toggle('on', state.colorful);
+      buildKeys();
+      renderTabs();
+      render();
+    })();
+  </script>
+</body>
+</html>
