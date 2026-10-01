@@ -24,6 +24,8 @@ data/zhuyin-syllables.js # 國語注音拼音積木題庫（常用字拆解成�
 data/carry-addition.js # 進位教學題庫（兩位數+兩位數，刻意挑個位相加會超過10、十位相加+進位不超過9的組合），教學元件專用，不分難度
 data/addition-quiz.js # 加法測驗題庫（不進位），{chick,snake,tiger} 三層難度，規則是逐位相加都不超過9
 data/subtraction-quiz.js # 減法測驗題庫（不退位），{chick,snake,tiger} 三層難度，規則是被減數逐位都大於等於減數對應位
+music.html            # 五線譜小樂園（獨立頁面，樣式/腳本內嵌）：認識音階 / 玩音符 / 彈歌曲 / 小測驗
+data/music-songs.js   # 「彈歌曲」歌單，用簡譜字串寫（1 = 中央 Do），載入時自動檢查每小節拍數跟音域，寫錯的歌不上架並在 console 報錯；加歌只改這個檔
 grade1-2_english_vocabulary.md # 國小一二年級英文單字參考清單（出題詞彙來源，唯讀）
 ```
 

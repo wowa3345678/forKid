@@ -8,7 +8,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
   <style>
-    /* 獨立、自給自足的單檔頁面（跟 breakfast.html 一樣）：樣式跟腳本都內嵌，直接用瀏覽器打開就能跑。
+    /* 獨立頁面（跟 breakfast.html 一樣）：樣式跟腳本都內嵌，直接用瀏覽器打開就能跑。
+       唯一的外部檔是歌單 data/music-songs.js（加歌只要改那個檔）。
        設計語彙（顏色/圓角/陰影/66px 觸控目標）沿用小一練習網的 design system，主題色用紫色漸層。 */
     :root {
       --bg: #fff9f0;
@@ -195,6 +196,7 @@
     .clef-dot { fill: #292524; }
     .note .stem { stroke: #292524; stroke-width: 3; stroke-linecap: round; }
     .note .ledger { stroke: #57534e; stroke-width: 2.5; }
+    .note .dot { fill: #292524; }
     .note { cursor: pointer; }
     .note .body { transform-box: fill-box; transform-origin: center; }
     .note.hl .body { animation: notePop 0.42s ease; }
@@ -263,6 +265,79 @@
     .key.wrong { animation: wrongShake 0.4s ease; }
     #keys.mono .key { border-bottom-color: #d6d3d1; }
 
+    /* ---------- 彈歌曲 ---------- */
+    .song-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .song-card {
+      min-height: 88px;
+      padding: 12px 16px;
+      border: 3px solid transparent;
+      border-radius: var(--radius-md);
+      background: var(--white);
+      box-shadow: var(--shadow-md);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-align: left;
+    }
+    .song-card:active { transform: scale(0.97); border-color: #d8b4fe; }
+    .song-emoji {
+      flex: none;
+      width: 60px;
+      height: 60px;
+      border-radius: 18px;
+      background: var(--song-grad);
+      box-shadow: 0 4px 12px var(--song-shadow);
+      display: grid;
+      place-items: center;
+      font-size: 32px;
+    }
+    .song-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .song-title { font-size: 22px; font-weight: 900; color: var(--ink); }
+    .song-sub { font-size: 15px; font-weight: 800; color: var(--ink-soft); }
+    .song-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .song-head-title { font-size: 24px; font-weight: 900; }
+    .page-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+    .page-arrow {
+      width: 66px;
+      height: 66px;
+      border: 3px solid #d8b4fe;
+      border-radius: var(--radius-sm);
+      background: var(--white);
+      color: #7e57c2;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+    }
+    .page-arrow:disabled { opacity: 0.35; cursor: default; }
+    .page-arrow:not(:disabled):active { transform: scale(0.95); }
+    .page-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      min-width: 110px;
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--ink-soft);
+    }
+    .page-dots { display: flex; gap: 8px; }
+    .page-dot { width: 12px; height: 12px; border-radius: 50%; background: #e7e5e4; }
+    .page-dot.on { background: #ab47bc; }
+
     /* ---------- 小測驗 ---------- */
     .progress-wrap { display: flex; flex-direction: column; gap: 6px; }
     .progress-meta { display: flex; justify-content: space-between; font-size: 16px; font-weight: 800; color: var(--ink-soft); }
@@ -323,6 +398,7 @@
       .m-title-icon { width: 40px; height: 40px; font-size: 22px; }
       .chip-button { padding: 0 12px; font-size: 14px; }
       .key { min-height: 96px; }
+      .song-list { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -339,6 +415,7 @@
     </div>
   </div>
 
+  <script src="data/music-songs.js"></script>
   <script>
     (function () {
       'use strict';
@@ -357,14 +434,53 @@
       ];
       var NAMES = ['Do', 'Re', 'Mi', 'Fa', 'Sol', 'La', 'Si'];
 
-      // 小星星前四小節：n = 音高位置，b = 拍數（四四拍，每小節四拍）
-      var TWINKLE = [
-        { n: 0, b: 1 }, { n: 0, b: 1 }, { n: 4, b: 1 }, { n: 4, b: 1 },
-        { n: 5, b: 1 }, { n: 5, b: 1 }, { n: 4, b: 2 },
-        { n: 3, b: 1 }, { n: 3, b: 1 }, { n: 2, b: 1 }, { n: 2, b: 1 },
-        { n: 1, b: 1 }, { n: 1, b: 1 }, { n: 0, b: 2 }
-      ];
+      // 歌單來自 data/music-songs.js 的簡譜字串，這裡解析成 { n: 音高位置, b: 拍數, bar: 第幾小節, pos: 小節內第幾拍 }
+      var BARS_PER_ROW = 4;
       var BEAT_MS = 520;
+
+      function parseSong(song) {
+        var meter = song.meter || 4;
+        if (meter !== 4) throw new Error('目前只支援四四拍（meter: 4）');
+        var notes = [];
+        var bars = song.notes.split('|').map(function (s) { return s.trim(); }).filter(Boolean);
+        bars.forEach(function (barText, bar) {
+          var where = '第 ' + (bar + 1) + ' 小節「' + barText + '」';
+          var pos = 0;
+          var last = null;
+          barText.split(/\s+/).forEach(function (tok) {
+            if (tok === '-') {
+              if (!last) throw new Error(where + '：小節開頭不能是 -');
+              last.b += 1;
+              pos += 1;
+              return;
+            }
+            var m = /^([1-7])([',]*)$/.exec(tok);
+            if (!m) throw new Error(where + '：看不懂「' + tok + '」');
+            var oct = (m[2].match(/'/g) || []).length - (m[2].match(/,/g) || []).length;
+            var n = Number(m[1]) - 1 + oct * 7;
+            if (n < 0 || n >= NOTES.length) throw new Error(where + '：「' + tok + '」超出目前支援的音域（Do～高 Do）');
+            last = { n: n, b: 1, bar: bar, pos: pos };
+            notes.push(last);
+            pos += 1;
+          });
+          if (pos !== meter) throw new Error(where + '：拍數加起來是 ' + pos + '，應該是 ' + meter);
+        });
+        return { id: song.id, title: song.title, emoji: song.emoji, meter: meter, notes: notes, barCount: bars.length };
+      }
+
+      // 寫錯的歌不上架，在 console 說清楚錯在哪
+      var SONGS = [];
+      (typeof MUSIC_SONGS === 'undefined' ? [] : MUSIC_SONGS).forEach(function (song) {
+        try {
+          if (SONGS.some(function (s) { return s.id === song.id; })) throw new Error('id 重複');
+          SONGS.push(parseSong(song));
+        } catch (e) {
+          console.error('[music-songs] 「' + song.title + '」（' + song.id + '）' + e.message);
+        }
+      });
+      function findSong(id) {
+        return SONGS.filter(function (s) { return s.id === id; })[0] || null;
+      }
 
       var INK = '#292524';
       var COLOR_KEY = 'forkid:music-colorful';
@@ -374,7 +490,9 @@
         tab: 'scale',
         colorful: true,
         playN: null,           // 「玩音符」目前的音
-        showNames: true,       // 「小星星」是否顯示唱名
+        showNames: true,       // 「彈歌曲」是否顯示唱名
+        songId: null,          // 「彈歌曲」選中的歌，null = 顯示選歌清單
+        songPage: 0,           // 目前顯示第幾行譜（每行 4 小節）
         songPlaying: false,
         practice: null,        // { idx } 「我來彈」進行中
         quiz: null
@@ -461,17 +579,20 @@
           '<circle class="clef-dot" cx="66" cy="214" r="5.5"/>';
       }
 
-      // 一顆音符。opts: hollow（二分音符）、id（給小星星逐顆辨識用）
+      // 一顆音符。opts: beats（1 四分、2 二分、3 附點二分、4 全音符，預設 1）、id（給歌曲逐顆辨識用）
       function noteSVG(n, x, opts) {
         opts = opts || {};
+        var beats = opts.beats || 1;
         var y = pitchY(n);
         var up = n < 6;
         var col = noteColor(n);
-        var stem = up
+        var stem = beats === 4 ? '' : up
           ? '<line class="stem" x1="12.5" y1="-3" x2="12.5" y2="-80"/>'
           : '<line class="stem" x1="-12.5" y1="3" x2="-12.5" y2="80"/>';
+        // 附點：音符在線上時點要往上挪到間裡
+        if (beats === 3) stem += '<circle class="dot" cx="24" cy="' + (n % 2 === 0 ? -7 : 0) + '" r="4.5"/>';
         var head;
-        if (opts.hollow) {
+        if (beats >= 2) {
           head = '<ellipse rx="13.5" ry="9.5" transform="rotate(-20)" fill="#fff" stroke="' + INK + '" stroke-width="4" class="head-hollow"/>' +
                  (state.colorful ? '<ellipse rx="8" ry="4.5" transform="rotate(-20)" fill="' + col + '" opacity=".85"/>' : '');
         } else {
@@ -545,7 +666,7 @@
       var TABS = [
         { id: 'scale', emoji: '🎼', label: '認識音階' },
         { id: 'play',  emoji: '👆', label: '玩音符' },
-        { id: 'song',  emoji: '⭐', label: '小星星' },
+        { id: 'song',  emoji: '🎵', label: '彈歌曲' },
         { id: 'quiz',  emoji: '🎯', label: '小測驗' }
       ];
       function renderTabs() {
@@ -698,37 +819,99 @@
         }
       }
 
-      /* ---------- 小星星 ---------- */
+      /* ---------- 彈歌曲：先選歌，再一行一行（每行 4 小節）看譜、聽、彈 ---------- */
       var songTimers = [];
       var BAR_X0 = 112, BAR_W = 150, BEAT_W = 36;
-      function songLayout() {
-        var beat = 0;
-        return TWINKLE.map(function (nt, k) {
-          var bar = Math.floor(beat / 4);
-          var x = BAR_X0 + bar * BAR_W + 24 + (beat % 4) * BEAT_W;
-          var out = { n: nt.n, b: nt.b, x: x, beat: beat, k: k };
-          beat += nt.b;
-          return out;
+      // 選歌卡片的 emoji 底色，依序輪流（沿用全站色票）
+      var SONG_GRADS = [
+        ['linear-gradient(145deg, #FF7043, #FFA726)', 'rgba(255,112,67,.35)'],
+        ['linear-gradient(145deg, #26C6DA, #4DB6AC)', 'rgba(38,198,218,.35)'],
+        ['linear-gradient(145deg, #AB47BC, #7E57C2)', 'rgba(171,71,188,.35)'],
+        ['linear-gradient(145deg, #42A5F5, #5C6BC0)', 'rgba(66,165,245,.35)'],
+        ['linear-gradient(135deg, #22C55E, #4ADE80)', 'rgba(34,197,94,.35)'],
+        ['linear-gradient(145deg, #F43F5E, #FB7185)', 'rgba(244,63,94,.35)']
+      ];
+
+      function curSong() { return findSong(state.songId); }
+      function rowOf(nt) { return Math.floor(nt.bar / BARS_PER_ROW); }
+      function rowCount(song) { return Math.ceil(song.barCount / BARS_PER_ROW); }
+      function pitchName(n) { return NOTES[n].tag + NOTES[n].name; }
+
+      function renderSong() {
+        if (curSong()) renderSongSheet(curSong());
+        else renderSongList();
+      }
+
+      function renderSongList() {
+        stage.innerHTML =
+          '<div class="hint">挑一首歌來彈彈看！</div>' +
+          '<div class="song-list">' + SONGS.map(function (song, i) {
+            var ns = song.notes.map(function (nt) { return nt.n; });
+            var g = SONG_GRADS[i % SONG_GRADS.length];
+            return '<button class="song-card" type="button" data-id="' + song.id + '" style="--song-grad:' + g[0] + ';--song-shadow:' + g[1] + '">' +
+              '<span class="song-emoji">' + song.emoji + '</span>' +
+              '<span class="song-text">' +
+                '<span class="song-title">' + song.title + '</span>' +
+                '<span class="song-sub">' + pitchName(Math.min.apply(null, ns)) + '～' + pitchName(Math.max.apply(null, ns)) +
+                  ' · ' + song.barCount + ' 小節</span>' +
+              '</span>' +
+            '</button>';
+          }).join('') + '</div>';
+        stage.querySelectorAll('.song-card').forEach(function (b) {
+          b.addEventListener('click', function () {
+            stopEverything();
+            state.songId = b.dataset.id;
+            state.songPage = 0;
+            renderSong();
+          });
         });
       }
 
-      function renderSong() {
-        var inner = staffLines(20, 700) + trebleClef();
-        // 小節線與終止線
-        for (var b = 1; b <= 3; b++) {
+      function rowSVG(song, page) {
+        var firstBar = page * BARS_PER_ROW;
+        var bars = Math.min(BARS_PER_ROW, song.barCount - firstBar);
+        var endX = BAR_X0 + bars * BAR_W;
+        var top = pitchY(10), bottom = pitchY(2);
+        var inner = staffLines(20, endX) + trebleClef();
+        for (var b = 1; b < bars; b++) {
           var bx = BAR_X0 + b * BAR_W;
-          inner += '<line class="bar-line" x1="' + bx + '" x2="' + bx + '" y1="' + pitchY(10) + '" y2="' + pitchY(2) + '"/>';
+          inner += '<line class="bar-line" x1="' + bx + '" x2="' + bx + '" y1="' + top + '" y2="' + bottom + '"/>';
         }
-        var endX = BAR_X0 + 4 * BAR_W;
-        inner += '<line class="bar-line" x1="' + (endX - 9) + '" x2="' + (endX - 9) + '" y1="' + pitchY(10) + '" y2="' + pitchY(2) + '"/>';
-        inner += '<line class="bar-line thick" x1="' + (endX - 2) + '" x2="' + (endX - 2) + '" y1="' + pitchY(10) + '" y2="' + pitchY(2) + '"/>';
-        songLayout().forEach(function (s) {
-          inner += noteSVG(s.n, s.x, { id: s.k, hollow: s.b === 2 });
-          if (state.showNames) inner += labelSVG(s.n, s.x, 246, 17);
+        if (page === rowCount(song) - 1) {
+          // 最後一行：終止線
+          inner += '<line class="bar-line" x1="' + (endX - 9) + '" x2="' + (endX - 9) + '" y1="' + top + '" y2="' + bottom + '"/>';
+          inner += '<line class="bar-line thick" x1="' + (endX - 2) + '" x2="' + (endX - 2) + '" y1="' + top + '" y2="' + bottom + '"/>';
+        } else {
+          inner += '<line class="bar-line" x1="' + (endX - 1) + '" x2="' + (endX - 1) + '" y1="' + top + '" y2="' + bottom + '"/>';
+        }
+        song.notes.forEach(function (nt, k) {
+          if (rowOf(nt) !== page) return;
+          var x = BAR_X0 + (nt.bar - firstBar) * BAR_W + 24 + nt.pos * BEAT_W;
+          inner += noteSVG(nt.n, x, { id: k, beats: nt.b });
+          if (state.showNames) inner += labelSVG(nt.n, x, 246, 17);
         });
+        return staffSVG(inner);
+      }
+
+      function renderSongSheet(song) {
+        var rows = rowCount(song);
+        var page = state.songPage;
+        var dots = '';
+        for (var r = 0; r < rows; r++) dots += '<span class="page-dot' + (r === page ? ' on' : '') + '"></span>';
         stage.innerHTML =
-          staffSVG(inner) +
-          '<div class="hint" id="song-msg">' + songHint() + '</div>' +
+          '<div class="song-head">' +
+            '<button class="chip-button" type="button" id="song-back">← 換一首</button>' +
+            '<div class="song-head-title">' + song.emoji + ' ' + song.title + '</div>' +
+          '</div>' +
+          rowSVG(song, page) +
+          (rows > 1
+            ? '<div class="page-row">' +
+                '<button class="page-arrow" type="button" id="page-prev"' + (page === 0 ? ' disabled' : '') + '>◀</button>' +
+                '<div class="page-info"><div class="page-dots">' + dots + '</div>第 ' + (page + 1) + ' / ' + rows + ' 行</div>' +
+                '<button class="page-arrow" type="button" id="page-next"' + (page === rows - 1 ? ' disabled' : '') + '>▶</button>' +
+              '</div>'
+            : '') +
+          '<div class="hint" id="song-msg">' + songHint(song) + '</div>' +
           '<div class="action-row">' +
             '<button class="primary-button" type="button" id="song-play">' + (state.songPlaying ? '⏹ 停止' : '▶ 聽一聽') + '</button>' +
             '<button class="secondary-button" type="button" id="song-practice">' + (state.practice ? '↺ 重來' : '🎯 我來彈') + '</button>' +
@@ -740,6 +923,15 @@
           e.preventDefault();
           pressPitch(Number(g.dataset.n));
         });
+        document.getElementById('song-back').addEventListener('click', function () {
+          stopEverything();
+          state.songId = null;
+          renderSong();
+        });
+        if (rows > 1) {
+          document.getElementById('page-prev').addEventListener('click', function () { setSongPage(page - 1); });
+          document.getElementById('page-next').addEventListener('click', function () { setSongPage(page + 1); });
+        }
         document.getElementById('song-play').addEventListener('click', toggleSongPlay);
         document.getElementById('song-practice').addEventListener('click', startPractice);
         document.getElementById('song-names').addEventListener('click', function () {
@@ -749,9 +941,22 @@
         if (state.practice) markTarget();
       }
 
-      function songHint() {
+      function setSongPage(p) {
+        var rows = rowCount(curSong());
+        state.songPage = Math.max(0, Math.min(rows - 1, p));
+        renderSong();
+      }
+
+      // 只提這首歌真的有出現的長音符
+      function songHint(song) {
         if (state.practice) return '輪到有虛線圈圈的音符，按下面對的鍵！';
-        return '空心的音符（二分音符）要拉長兩拍喔';
+        var has = {};
+        song.notes.forEach(function (nt) { has[nt.b] = true; });
+        var parts = [];
+        if (has[2]) parts.push('有棒子的 2 拍');
+        if (has[3]) parts.push('多一個點的 3 拍');
+        if (has[4]) parts.push('沒有棒子的 4 拍');
+        return parts.length ? '空心的音符要拉長：' + parts.join('、') : '每個音符都唱一拍';
       }
       function setSongMsg(text, cls) {
         var m = document.getElementById('song-msg');
@@ -769,9 +974,11 @@
         }
         stopEverything();
         state.songPlaying = true;
+        var song = curSong();
         var t = 0;
-        TWINKLE.forEach(function (nt, k) {
+        song.notes.forEach(function (nt, k) {
           songTimers.push(setTimeout(function () {
+            if (rowOf(nt) !== state.songPage) setSongPage(rowOf(nt));   // 唱到下一行就自動翻頁
             playNote(nt.n, nt.b * BEAT_MS / 1000 + 0.35);
             flashKey(nt.n);
             flashEl(songNoteEl(k));
@@ -788,6 +995,7 @@
       function startPractice() {
         stopEverything();
         state.practice = { idx: 0 };
+        state.songPage = 0;
         renderSong();
       }
       function markTarget() {
@@ -798,8 +1006,9 @@
       }
       function practiceHit(n) {
         var p = state.practice;
-        var want = TWINKLE[p.idx].n;
-        if (n !== want) {
+        var song = curSong();
+        var want = song.notes[p.idx];
+        if (n !== want.n) {
           playWrong();
           var k = keyEl(n);
           if (k) {
@@ -807,17 +1016,29 @@
             void k.offsetWidth;
             k.classList.add('wrong');
           }
+          if (rowOf(want) !== state.songPage) setSongPage(rowOf(want));   // 圈圈不在這一頁就翻回去
           setSongMsg('再找找看，圈圈在哪一條線／哪一格？', 'bad');
           return;
         }
-        playNote(n, TWINKLE[p.idx].b * BEAT_MS / 1000 + 0.3);
+        playNote(n, want.b * BEAT_MS / 1000 + 0.3);
         flashKey(n);
         flashEl(songNoteEl(p.idx));
         p.idx += 1;
-        if (p.idx >= TWINKLE.length) {
+        if (p.idx >= song.notes.length) {
           state.practice = null;
           renderSong();
-          setSongMsg('🎉 太棒了！你把小星星彈完了！', 'good');
+          setSongMsg('🎉 太棒了！你把「' + song.title + '」彈完了！', 'good');
+          return;
+        }
+        if (rowOf(song.notes[p.idx]) !== state.songPage) {
+          // 這一行彈完了：停一下讓最後一顆音符亮完再翻頁
+          var nextRow = rowOf(song.notes[p.idx]);
+          setSongMsg('這一行完成！翻到下一行～', 'good');
+          setTimeout(function () {
+            if (state.practice !== p) return;
+            setSongPage(nextRow);
+            setSongMsg('這一行完成！翻到下一行～', 'good');
+          }, 450);
           return;
         }
         markTarget();
