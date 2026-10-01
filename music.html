@@ -197,6 +197,8 @@
     .note .stem { stroke: #292524; stroke-width: 3; stroke-linecap: round; }
     .note .ledger { stroke: #57534e; stroke-width: 2.5; }
     .note .dot { fill: #292524; }
+    .note .flag { fill: none; stroke: #292524; stroke-width: 4; stroke-linecap: round; }
+    .beam { fill: #292524; }
     .note { cursor: pointer; }
     .note .body { transform-box: fill-box; transform-origin: center; }
     .note.hl .body { animation: notePop 0.42s ease; }
@@ -235,13 +237,16 @@
     }
 
     /* ---------- 鍵盤 ---------- */
+    /* 鍵盤固定 12 鍵：iPad 上每鍵約 56px；手機太窄就左右滑，不把鍵擠扁 */
     #keys {
       display: flex;
       gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
     }
     .key {
       flex: 1;
-      min-width: 0;
+      min-width: 50px;
       min-height: 120px;
       padding: 8px 0 12px;
       border: 2px solid #e7e5e4;
@@ -261,7 +266,9 @@
     .key .k-tag { font-size: 12px; font-weight: 800; color: var(--ink-faint); min-height: 14px; }
     .key .k-name { font-size: clamp(14px, 3.6vw, 24px); font-weight: 900; color: var(--ink); }
     .key .k-num { font-size: 14px; font-weight: 800; color: var(--ink-soft); }
-    .key.down, .key:active { transform: translateY(4px); background: #faf5ff; border-bottom-width: 8px; }
+    .key.high { background: #f5f3ff; }
+    .key.oct-start { margin-left: 8px; }
+    .key.down, .key:active { transform: translateY(4px); background: #ede9fe; border-bottom-width: 8px; }
     .key.wrong { animation: wrongShake 0.4s ease; }
     #keys.mono .key { border-bottom-color: #d6d3d1; }
 
@@ -430,17 +437,26 @@
         { i: 4, name: 'Sol', num: 5, freq: 392.00, color: '#06b6d4', tag: '' },
         { i: 5, name: 'La',  num: 6, freq: 440.00, color: '#3b82f6', tag: '' },
         { i: 6, name: 'Si',  num: 7, freq: 493.88, color: '#a855f7', tag: '' },
-        { i: 7, name: 'Do',  num: 1, freq: 523.25, color: '#ef4444', tag: '高' }
+        { i: 7, name: 'Do',  num: 1, freq: 523.25, color: '#ef4444', tag: '高' },
+        // 高 Re～高 Sol 只給歌曲用；高 Sol 剛好在第五線上方，都不用畫加線
+        { i: 8, name: 'Re',  num: 2, freq: 587.33, color: '#f97316', tag: '高' },
+        { i: 9, name: 'Mi',  num: 3, freq: 659.25, color: '#eab308', tag: '高' },
+        { i: 10, name: 'Fa', num: 4, freq: 698.46, color: '#22c55e', tag: '高' },
+        { i: 11, name: 'Sol', num: 5, freq: 783.99, color: '#06b6d4', tag: '高' }
       ];
+      // 認識音階 / 小測驗只用 Do～高 Do 一個完整八度；鍵盤和玩音符用全部音域
+      var BASE_LO = 0, BASE_HI = 7;
       var NAMES = ['Do', 'Re', 'Mi', 'Fa', 'Sol', 'La', 'Si'];
 
-      // 歌單來自 data/music-songs.js 的簡譜字串，這裡解析成 { n: 音高位置, b: 拍數, bar: 第幾小節, pos: 小節內第幾拍 }
-      var BARS_PER_ROW = 4;
+      // 歌單來自 data/music-songs.js 的簡譜字串，這裡解析成
+      // { n: 音高位置, b: 拍數（0.5/1/1.5/2/3/4）, bar: 第幾小節, pos: 小節內第幾拍 }，再由 layoutSong() 排成一行一行
       var BEAT_MS = 520;
 
       function parseSong(song) {
         var meter = song.meter || 4;
-        if (meter !== 4) throw new Error('目前只支援四四拍（meter: 4）');
+        if ([2, 3, 4].indexOf(meter) < 0) throw new Error('meter 只能是 2、3、4');
+        var pickup = song.pickup || 0;
+        if (pickup && !(pickup > 0 && pickup < meter)) throw new Error('pickup（弱起拍）要比 meter 少');
         var notes = [];
         var bars = song.notes.split('|').map(function (s) { return s.trim(); }).filter(Boolean);
         bars.forEach(function (barText, bar) {
@@ -450,22 +466,76 @@
           barText.split(/\s+/).forEach(function (tok) {
             if (tok === '-') {
               if (!last) throw new Error(where + '：小節開頭不能是 -');
+              if (last.b % 1 !== 0) throw new Error(where + '：半拍或附點的音後面不能接 -');
               last.b += 1;
               pos += 1;
               return;
             }
-            var m = /^([1-7])([',]*)$/.exec(tok);
+            var m = /^([1-7])([',]*)(\.?)(_?)$/.exec(tok);
             if (!m) throw new Error(where + '：看不懂「' + tok + '」');
+            if (m[3] && m[4]) throw new Error(where + '：「' + tok + '」附點八分音符還不支援');
             var oct = (m[2].match(/'/g) || []).length - (m[2].match(/,/g) || []).length;
             var n = Number(m[1]) - 1 + oct * 7;
-            if (n < 0 || n >= NOTES.length) throw new Error(where + '：「' + tok + '」超出目前支援的音域（Do～高 Do）');
-            last = { n: n, b: 1, bar: bar, pos: pos };
+            if (n < 0 || n >= NOTES.length) throw new Error(where + '：「' + tok + '」超出目前支援的音域（Do～高 Sol）');
+            last = { n: n, b: m[4] ? 0.5 : m[3] ? 1.5 : 1, bar: bar, pos: pos };
             notes.push(last);
-            pos += 1;
+            pos += last.b;
           });
-          if (pos !== meter) throw new Error(where + '：拍數加起來是 ' + pos + '，應該是 ' + meter);
+          var want = bar === 0 && pickup ? pickup : meter;
+          if (pos !== want) {
+            throw new Error(where + '：拍數加起來是 ' + pos + '，應該是 ' + want + (want === pickup ? '（弱起拍 pickup）' : ''));
+          }
         });
-        return { id: song.id, title: song.title, emoji: song.emoji, meter: meter, notes: notes, barCount: bars.length };
+        var ns = notes.map(function (nt) { return nt.n; });
+        var parsed = {
+          id: song.id, title: song.title, emoji: song.emoji, meter: meter, pickup: pickup,
+          notes: notes, barCount: bars.length,
+          lo: Math.min.apply(null, ns), hi: Math.max.apply(null, ns)
+        };
+        layoutSong(parsed);
+        return parsed;
+      }
+
+      // 排版：每行最多 4 個完整小節（弱起小節不算），太擠就整行等比例縮，縮太多就少放一小節。
+      // 結果寫回每顆音符的 row / x，以及 song.rows = [{ barXs: 各小節起點, endX: 行尾 }]
+      var BAR_X0 = 112, BEAT_W = 36, EIGHTH_W = 40, ROW_W = 600, MAX_BARS_PER_ROW = 4;
+      function slotW(b) { return b === 0.5 ? EIGHTH_W : b * BEAT_W; }
+      function layoutSong(song) {
+        var bars = [];
+        song.notes.forEach(function (nt) {
+          var bi = bars[nt.bar] || (bars[nt.bar] = { used: 0, last: 0, notes: [] });
+          nt.off = bi.used;
+          bi.last = bi.used;
+          bi.used += slotW(nt.b);
+          bi.notes.push(nt);
+        });
+        // 小節寬：依拍數給空間，但最後一顆音符跟小節線之間至少留 18
+        bars.forEach(function (bi) { bi.w = Math.max(24 + bi.last + 18, 6 + bi.used); });
+
+        song.rows = [];
+        var bar = 0;
+        while (bar < bars.length) {
+          var start = bar, w = 0, full = 0;
+          while (bar < bars.length) {
+            var isPickup = song.pickup && bar === 0;
+            if (!isPickup && full >= MAX_BARS_PER_ROW) break;
+            if (bar > start && (w + bars[bar].w) * 0.8 > ROW_W) break;
+            w += bars[bar].w;
+            if (!isPickup) full += 1;
+            bar += 1;
+          }
+          var scale = Math.min(1, ROW_W / w);
+          var x = BAR_X0, barXs = [];
+          for (var b = start; b < bar; b++) {
+            barXs.push(x);
+            bars[b].notes.forEach(function (nt) {
+              nt.row = song.rows.length;
+              nt.x = x + (24 + nt.off) * scale;
+            });
+            x += bars[b].w * scale;
+          }
+          song.rows.push({ barXs: barXs, endX: x });
+        }
       }
 
       // 寫錯的歌不上架，在 console 說清楚錯在哪
@@ -584,13 +654,23 @@
         opts = opts || {};
         var beats = opts.beats || 1;
         var y = pitchY(n);
-        var up = n < 6;
+        var up = opts.up === undefined ? n < 6 : opts.up;
+        var stemTo = opts.stemTo === undefined ? (up ? -80 : 80) : opts.stemTo;   // 連符槓時由外面指定符桿長度
         var col = noteColor(n);
-        var stem = beats === 4 ? '' : up
-          ? '<line class="stem" x1="12.5" y1="-3" x2="12.5" y2="-80"/>'
-          : '<line class="stem" x1="-12.5" y1="3" x2="-12.5" y2="80"/>';
+        var stem = '';
+        if (beats !== 4) {
+          stem = up
+            ? '<line class="stem" x1="12.5" y1="-3" x2="12.5" y2="' + stemTo + '"/>'
+            : '<line class="stem" x1="-12.5" y1="3" x2="-12.5" y2="' + stemTo + '"/>';
+          // 單獨的八分音符：符尾一律往右彎
+          if (beats === 0.5 && !opts.beamed) {
+            stem += up
+              ? '<path class="flag" d="M 12.5 -80 C 14 -60, 34 -56, 28 -32"/>'
+              : '<path class="flag" d="M -12.5 80 C -11 60, 9 56, 3 32"/>';
+          }
+        }
         // 附點：音符在線上時點要往上挪到間裡
-        if (beats === 3) stem += '<circle class="dot" cx="24" cy="' + (n % 2 === 0 ? -7 : 0) + '" r="4.5"/>';
+        if (beats === 1.5 || beats === 3) stem += '<circle class="dot" cx="24" cy="' + (n % 2 === 0 ? -7 : 0) + '" r="4.5"/>';
         var head;
         if (beats >= 2) {
           head = '<ellipse rx="13.5" ry="9.5" transform="rotate(-20)" fill="#fff" stroke="' + INK + '" stroke-width="4" class="head-hollow"/>' +
@@ -608,8 +688,12 @@
         '</g>';
       }
 
+      // 高音跟簡譜一樣在唱名上面加一個點
       function labelSVG(n, x, y, size) {
-        return '<text class="note-label" x="' + x + '" y="' + y + '"' + (size ? ' font-size="' + size + '"' : '') + ' fill="' + labelColor(n) + '">' + NOTES[n].name + '</text>';
+        var high = n >= 7
+          ? '<circle cx="' + x + '" cy="' + (y - (size || 20) - 3) + '" r="2.8" fill="' + labelColor(n) + '"/>'
+          : '';
+        return high + '<text class="note-label" x="' + x + '" y="' + y + '"' + (size ? ' font-size="' + size + '"' : '') + ' fill="' + labelColor(n) + '">' + NOTES[n].name + '</text>';
       }
 
       function staffSVG(inner, attrs) {
@@ -625,9 +709,11 @@
       }
 
       /* ================= 鍵盤 ================= */
+      // 鍵盤固定是全部音域（跟真的鋼琴一樣不會因為歌曲改變），高音那組另外上底色、前面多留一點空隙
       function buildKeys() {
         keysEl.innerHTML = NOTES.map(function (nt, n) {
-          return '<button class="key" type="button" data-n="' + n + '" style="--key-color:' + nt.color + '">' +
+          var cls = 'key' + (nt.tag ? ' high' : '') + (n === 7 ? ' oct-start' : '');
+          return '<button class="' + cls + '" type="button" data-n="' + n + '" style="--key-color:' + nt.color + '">' +
             '<span class="k-tag">' + (nt.tag ? nt.tag + '音' : '') + '</span>' +
             '<span class="k-name">' + nt.name + '</span>' +
             '<span class="k-num">' + nt.num + '</span>' +
@@ -722,7 +808,7 @@
 
       function renderScale() {
         var inner = staffLines(20, 700) + trebleClef();
-        NOTES.forEach(function (nt, n) {
+        NOTES.slice(BASE_LO, BASE_HI + 1).forEach(function (nt, n) {
           inner += noteSVG(n, scaleX(n)) + labelSVG(n, scaleX(n), 240);
         });
         stage.innerHTML =
@@ -745,7 +831,7 @@
       function playScale(down) {
         scaleTimers.forEach(clearTimeout);
         scaleTimers = [];
-        var order = NOTES.map(function (_, n) { return n; });
+        var order = NOTES.slice(BASE_LO, BASE_HI + 1).map(function (_, n) { return n; });
         if (down) order.reverse();
         order.forEach(function (n, k) {
           scaleTimers.push(setTimeout(function () {
@@ -769,7 +855,7 @@
           var vb = svg.viewBox.baseVal;
           var y = vb.y + (e.clientY - r.top) * vb.height / r.height;
           var n = Math.round(2 + (E4_Y - y) / HALF);
-          n = Math.max(0, Math.min(7, n));
+          n = Math.max(0, Math.min(NOTES.length - 1, n));
           if (n !== state.playN || !dragging) {
             if (n !== state.playN) setPlayNote(n, true);
           }
@@ -781,7 +867,7 @@
           var r = svg.getBoundingClientRect();
           var vb = svg.viewBox.baseVal;
           var y = vb.y + (e.clientY - r.top) * vb.height / r.height;
-          var n = Math.max(0, Math.min(7, Math.round(2 + (E4_Y - y) / HALF)));
+          var n = Math.max(0, Math.min(NOTES.length - 1, Math.round(2 + (E4_Y - y) / HALF)));
           setPlayNote(n, true);   // 按下時就算同一個音也要響
         });
         svg.addEventListener('pointermove', function (e) { if (dragging) move(e); });
@@ -815,13 +901,14 @@
           var onLine = n % 2 === 0;
           hint.textContent = n === 0
             ? 'Do 在最下面，要多加一條小短線來坐！'
-            : (onLine ? '這個音符穿在「線」上' : '這個音符住在「格子」裡');
+            : n === NOTES.length - 1
+              ? '高音 Sol 坐在最上面那條線的上方'
+              : (onLine ? '這個音符穿在「線」上' : '這個音符住在「格子」裡');
         }
       }
 
-      /* ---------- 彈歌曲：先選歌，再一行一行（每行 4 小節）看譜、聽、彈 ---------- */
+      /* ---------- 彈歌曲：先選歌，再一行一行（每行最多 4 小節）看譜、聽、彈 ---------- */
       var songTimers = [];
-      var BAR_X0 = 112, BAR_W = 150, BEAT_W = 36;
       // 選歌卡片的 emoji 底色，依序輪流（沿用全站色票）
       var SONG_GRADS = [
         ['linear-gradient(145deg, #FF7043, #FFA726)', 'rgba(255,112,67,.35)'],
@@ -833,8 +920,8 @@
       ];
 
       function curSong() { return findSong(state.songId); }
-      function rowOf(nt) { return Math.floor(nt.bar / BARS_PER_ROW); }
-      function rowCount(song) { return Math.ceil(song.barCount / BARS_PER_ROW); }
+      function rowOf(nt) { return nt.row; }
+      function rowCount(song) { return song.rows.length; }
       function pitchName(n) { return NOTES[n].tag + NOTES[n].name; }
 
       function renderSong() {
@@ -846,14 +933,14 @@
         stage.innerHTML =
           '<div class="hint">挑一首歌來彈彈看！</div>' +
           '<div class="song-list">' + SONGS.map(function (song, i) {
-            var ns = song.notes.map(function (nt) { return nt.n; });
             var g = SONG_GRADS[i % SONG_GRADS.length];
             return '<button class="song-card" type="button" data-id="' + song.id + '" style="--song-grad:' + g[0] + ';--song-shadow:' + g[1] + '">' +
               '<span class="song-emoji">' + song.emoji + '</span>' +
               '<span class="song-text">' +
                 '<span class="song-title">' + song.title + '</span>' +
-                '<span class="song-sub">' + pitchName(Math.min.apply(null, ns)) + '～' + pitchName(Math.max.apply(null, ns)) +
-                  ' · ' + song.barCount + ' 小節</span>' +
+                '<span class="song-sub">' + pitchName(song.lo) + '～' + pitchName(song.hi) +
+                  ' · ' + (song.barCount - (song.pickup ? 1 : 0)) + ' 小節' +
+                  (song.meter === 4 ? '' : ' · ' + song.meter + ' 拍子') + '</span>' +
               '</span>' +
             '</button>';
           }).join('') + '</div>';
@@ -867,16 +954,25 @@
         });
       }
 
+      // 同一拍裡連著的兩個八分音符用符槓連起來，回傳 { 第一顆的 k: 第二顆的 k }
+      function beamPairs(song) {
+        var pairs = {};
+        song.notes.forEach(function (nt, k) {
+          var next = song.notes[k + 1];
+          if (nt.b === 0.5 && nt.pos % 1 === 0 && next && next.b === 0.5 &&
+              next.bar === nt.bar && next.pos === nt.pos + 0.5) pairs[k] = k + 1;
+        });
+        return pairs;
+      }
+
       function rowSVG(song, page) {
-        var firstBar = page * BARS_PER_ROW;
-        var bars = Math.min(BARS_PER_ROW, song.barCount - firstBar);
-        var endX = BAR_X0 + bars * BAR_W;
+        var row = song.rows[page];
+        var endX = row.endX;
         var top = pitchY(10), bottom = pitchY(2);
         var inner = staffLines(20, endX) + trebleClef();
-        for (var b = 1; b < bars; b++) {
-          var bx = BAR_X0 + b * BAR_W;
+        row.barXs.slice(1).forEach(function (bx) {
           inner += '<line class="bar-line" x1="' + bx + '" x2="' + bx + '" y1="' + top + '" y2="' + bottom + '"/>';
-        }
+        });
         if (page === rowCount(song) - 1) {
           // 最後一行：終止線
           inner += '<line class="bar-line" x1="' + (endX - 9) + '" x2="' + (endX - 9) + '" y1="' + top + '" y2="' + bottom + '"/>';
@@ -884,11 +980,27 @@
         } else {
           inner += '<line class="bar-line" x1="' + (endX - 1) + '" x2="' + (endX - 1) + '" y1="' + top + '" y2="' + bottom + '"/>';
         }
+        var pairs = beamPairs(song);
+        var beamed = {};   // k -> { up, stemTo }
+        Object.keys(pairs).forEach(function (k1) {
+          var a = song.notes[k1], b = song.notes[pairs[k1]];
+          if (a.row !== page) return;
+          // 兩顆一起決定符桿方向，符槓拉平，靠近符頭的那顆符桿短一點
+          var up = (a.n + b.n) / 2 < 6;
+          var ya = pitchY(a.n), yb = pitchY(b.n);
+          var beamY = up ? Math.min(ya, yb) - 80 : Math.max(ya, yb) + 80;
+          var dx = up ? 12.5 : -12.5;
+          beamed[k1] = { up: up, stemTo: beamY - ya };
+          beamed[pairs[k1]] = { up: up, stemTo: beamY - yb };
+          inner += '<rect class="beam" x="' + (a.x + dx - 1.5) + '" y="' + (up ? beamY : beamY - 8) + '" width="' + (b.x - a.x + 3) + '" height="8"/>';
+        });
         song.notes.forEach(function (nt, k) {
           if (rowOf(nt) !== page) return;
-          var x = BAR_X0 + (nt.bar - firstBar) * BAR_W + 24 + nt.pos * BEAT_W;
-          inner += noteSVG(nt.n, x, { id: k, beats: nt.b });
-          if (state.showNames) inner += labelSVG(nt.n, x, 246, 17);
+          var bm = beamed[k];
+          inner += noteSVG(nt.n, nt.x, bm
+            ? { id: k, beats: nt.b, beamed: true, up: bm.up, stemTo: bm.stemTo }
+            : { id: k, beats: nt.b });
+          if (state.showNames) inner += labelSVG(nt.n, nt.x, 246, nt.b === 0.5 ? 15 : 17);
         });
         return staffSVG(inner);
       }
@@ -953,10 +1065,12 @@
         var has = {};
         song.notes.forEach(function (nt) { has[nt.b] = true; });
         var parts = [];
-        if (has[2]) parts.push('有棒子的 2 拍');
-        if (has[3]) parts.push('多一個點的 3 拍');
-        if (has[4]) parts.push('沒有棒子的 4 拍');
-        return parts.length ? '空心的音符要拉長：' + parts.join('、') : '每個音符都唱一拍';
+        if (has[0.5]) parts.push('有尾巴或連在一起的半拍');
+        if (has[1.5]) parts.push('黑色加點 1 拍半');
+        if (has[2]) parts.push('空心 2 拍');
+        if (has[3]) parts.push('空心加點 3 拍');
+        if (has[4]) parts.push('空心沒棒子 4 拍');
+        return parts.length ? '小提示：' + parts.join('、') : '每個音符都唱一拍';
       }
       function setSongMsg(text, cls) {
         var m = document.getElementById('song-msg');
