@@ -33,6 +33,13 @@ const MISTAKE_LOOKUP = {
       launch: (root, opts) => initMathQuiz(root, [q], { ...opts, operator: "+", icon: "➕", categoryLabel: "加法測驗", subjectId: "addition-quiz" })
     };
   },
+  "number-bond-quiz": (questionId) => {
+    const pools = window.NUMBER_BOND_QUIZ_PROBLEMS || {};
+    const q = [...(pools.chick || []), ...(pools.snake || []), ...(pools.tiger || [])].find((item) => item.id === questionId);
+    if (!q) return null;
+    // 分與合重練交給 app.js 的 openNumberBondQuiz（跟正常入口共用同一組 initMathQuiz 參數），這裡只回傳題目
+    return { emoji: "🏠", categoryLabel: "分與合", problems: [q] };
+  },
   "subtraction-quiz": (questionId) => {
     const pools = window.SUBTRACTION_QUIZ_PROBLEMS || {};
     const q = [...(pools.chick || []), ...(pools.snake || []), ...(pools.tiger || [])].find((item) => item.id === questionId);

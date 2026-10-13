@@ -1,15 +1,18 @@
-// 通用數學測驗元件：加法測驗、減法測驗共用同一套引擎，差異只在 operator（+/-）跟資料內容。
+// 通用數學測驗元件：加法測驗、減法測驗、分與合練習共用同一套引擎，差異只在 operator（+/-）跟資料內容。
 // problemsInput 給 { chick, snake, tiger } 三層物件時，會先顯示「選擇難度」畫面（小雞/蛇/老虎），
 // 選完才進入測驗；給單一陣列（如錯題複習單題重練）時，直接跳過難度選擇進入測驗。
+// 每題是 { id, a, b }，算式為 a operator b = 結果；題目也可以自帶 op（覆蓋 operator）、
+// blank（"a" | "b" | "result"，挖空哪一格，預設 "result"）、show: "house"（用分合屋圖呈現，屋頂是結果）。
+// 難度按鈕下方的說明預設照 operator 顯示，可用 opts.difficultyDesc = { chick, snake, tiger } 自訂。
 // 一題一個算式 4 選 1，答錯立刻揭曉正確答案、不能重試，按「下一題」前進，
 // 答錯的題目會記錄到 forkid:mistakes 共用錯題本。
 const MATH_QUIZ_DIFFICULTY_META = {
-  chick: { icon: "🐥", title: "小雞　簡單", desc2: { "+": "兩位數 + 一位數", "-": "兩位數 − 一位數" } },
-  snake: { icon: "🐍", title: "蛇　中等", desc2: { "+": "兩位數 + 兩位數", "-": "兩位數 − 兩位數" } },
-  tiger: { icon: "🐯", title: "老虎　困難", desc2: { "+": "三位數 + 三位數", "-": "三位數 − 三位數" } }
+  chick: { icon: "🐥", title: "小雞　簡單", desc2: { "+": "10 以內的加法", "-": "10 以內的減法" } },
+  snake: { icon: "🐍", title: "蛇　中等", desc2: { "+": "兩位數 + 一位數", "-": "兩位數 − 一位數" } },
+  tiger: { icon: "🐯", title: "老虎　困難", desc2: { "+": "兩位數 + 兩位數", "-": "兩位數 − 兩位數" } }
 };
 
-function initMathQuiz(root, problemsInput, { operator = "+", icon = "🔢", categoryLabel, subjectId, onBack, onHome } = {}) {
+function initMathQuiz(root, problemsInput, { operator = "+", icon = "🔢", categoryLabel, subjectId, difficultyDesc, onBack, onHome } = {}) {
   const isTiered = !Array.isArray(problemsInput);
   const state = {
     view: isTiered ? "select" : "quiz",
@@ -37,15 +40,23 @@ function initMathQuiz(root, problemsInput, { operator = "+", icon = "🔢", cate
     render();
   }
 
-  function prepareQuestion() {
-    const q = state.questions[state.index];
-    const correct = operator === "-" ? q.a - q.b : q.a + q.b;
-    state.correct = correct;
-    state.options = buildChoices(correct);
+  function solve(q) {
+    const op = q.op || operator;
+    const values = { a: q.a, b: q.b, result: op === "-" ? q.a - q.b : q.a + q.b };
+    const blank = q.blank || "result";
+    return { op, values, blank, correct: values[blank] };
   }
 
-  function buildChoices(correct) {
-    const hints = operator === "-" ? [correct + 10, correct - 1, correct + 1] : [correct - 10, correct - 1, correct + 1];
+  function prepareQuestion() {
+    const q = state.questions[state.index];
+    const { op, values, correct } = solve(q);
+    state.correct = correct;
+    // 差 10 的干擾選項只在超過 10 的題目才有意義（模擬十位算錯），10 以內的題目只用差 1、2 的數字
+    const tensHint = Math.max(values.a, values.b, values.result) > 10 ? [op === "-" ? correct + 10 : correct - 10] : [];
+    state.options = buildChoices(correct, [...tensHint, correct - 1, correct + 1]);
+  }
+
+  function buildChoices(correct, hints) {
     const set = new Set();
     hints.forEach((v) => { if (v !== correct && v >= 0) set.add(v); });
     let extra = 2;
@@ -82,7 +93,7 @@ function initMathQuiz(root, problemsInput, { operator = "+", icon = "🔢", cate
               <span class="row-icon">${meta.icon}</span>
               <span class="row-text">
                 <span class="row-title">${meta.title}</span>
-                <span class="row-subtitle">${meta.desc2[operator]}</span>
+                <span class="row-subtitle">${difficultyDesc ? difficultyDesc[level] : meta.desc2[operator]}</span>
               </span>
             </button>
           `;
@@ -110,8 +121,8 @@ function initMathQuiz(root, problemsInput, { operator = "+", icon = "🔢", cate
         <span class="quiz-score">⭐ ${state.correctCount} 分</span>
       </div>
       <div class="quiz-prompt">
-        <span class="prompt-text">${q.a} ${operator} ${q.b} = ?</span>
-        ${state.answered ? renderCaption() : `<span class="prompt-caption">選出正確答案</span>`}
+        ${renderPromptBody(q)}
+        ${state.answered ? renderCaption() : `<span class="prompt-caption">${(q.blank && q.blank !== "result") || q.show === "house" ? "? 是多少呢？" : "選出正確答案"}</span>`}
       </div>
       <div class="quiz-options">
         ${state.options.map((v) => `<button class="option-button${optionClass(v)}" data-value="${v}" ${state.answered ? "disabled" : ""}>
@@ -143,6 +154,21 @@ function initMathQuiz(root, problemsInput, { operator = "+", icon = "🔢", cate
         btn.addEventListener("click", () => handleAnswer(Number(btn.dataset.value), q));
       });
     }
+  }
+
+  // 挖空的那格先顯示「?」，作答後填入正確答案
+  function slot(key, solved) {
+    if (solved.blank !== key) return `${solved.values[key]}`;
+    return `<span class="mq-blank${state.answered ? " is-filled" : ""}">${state.answered ? solved.correct : "?"}</span>`;
+  }
+
+  function renderPromptBody(q) {
+    const solved = solve(q);
+    if (q.show === "house") {
+      return renderBondHouse(slot("result", solved), slot("a", solved), slot("b", solved));
+    }
+    const opSign = solved.op === "-" ? "−" : "+";
+    return `<span class="prompt-text">${slot("a", solved)} ${opSign} ${slot("b", solved)} = ${slot("result", solved)}</span>`;
   }
 
   function optionClass(value) {

@@ -39,9 +39,35 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // 數學：先進選單，「加法測驗／減法測驗」都用 initMathQuiz 共用引擎，先選難度（小雞/蛇/老虎）再進測驗
+  // 數學：先進選單，「加法測驗／減法測驗／分與合練習」都用 initMathQuiz 共用引擎，先選難度（小雞/蛇/老虎）再進測驗
   document.querySelector("#home-math").addEventListener("click", () => {
     navigateTo("screen-math-menu");
+  });
+
+  // 分與合：教學元件裡的「🎯 練習」分頁會開分與合練習，練完按 ◀ 回到教學畫面（保留原本的分頁跟分法）
+  function openNumberBondQuiz(problems, { onBack }) {
+    const numberBondQuizRoot = document.querySelector("#number-bond-quiz-root");
+    navigateTo("screen-number-bond-quiz");
+    initMathQuiz(numberBondQuizRoot, problems, {
+      operator: "+",
+      icon: "🏠",
+      categoryLabel: "分與合",
+      subjectId: "number-bond-quiz",
+      difficultyDesc: NUMBER_BOND_DIFFICULTY_DESC,
+      onBack,
+      onHome: () => navigateTo("screen-home")
+    });
+  }
+
+  document.querySelector("#menu-number-bond").addEventListener("click", () => {
+    const numberBondRoot = document.querySelector("#number-bond-root");
+    navigateTo("screen-number-bond");
+    initNumberBond(numberBondRoot, {
+      onBack: () => navigateTo("screen-math-menu"),
+      onPractice: () => openNumberBondQuiz(NUMBER_BOND_QUIZ_PROBLEMS, {
+        onBack: () => navigateTo("screen-number-bond")
+      })
+    });
   });
 
   document.querySelector("#menu-addition-quiz").addEventListener("click", () => {
@@ -182,6 +208,8 @@ document.addEventListener("DOMContentLoaded", () => {
             onBack: openMistakeReview,
             onHome: () => navigateTo("screen-home")
           });
+        } else if (subject === "number-bond-quiz") {
+          openNumberBondQuiz(info.problems, { onBack: openMistakeReview });
         } else if (subject === "subtraction-quiz") {
           const subtractionQuizRoot = document.querySelector("#subtraction-quiz-root");
           navigateTo("screen-subtraction-quiz");

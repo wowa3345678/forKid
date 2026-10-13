@@ -7,7 +7,7 @@
 純靜態網站，沒有 build step、沒有框架，直接用瀏覽器打開（或用簡單的 HTTP server）即可跑：
 
 ```
-index.html          # 畫面結構（home / 英文選單 / 選擇題 / 手寫練習 / 翻牌記憶卡 / 國語手寫練習）
+index.html          # 畫面結構（home / 英文選單 / 選擇題 / 手寫練習 / 翻牌記憶卡 / 國語手寫練習 / 數學選單與各練習）
 css/style.css        # 全站樣式（design system 見下方）
 js/app.js             # 畫面導覽（.screen 用 hidden 屬性切換）
 js/quiz.js            # 通用選擇題元件 initQuiz(root, questions, opts)
@@ -16,14 +16,16 @@ js/memory.js          # 通用翻牌記憶卡元件 initMemory(root, wordMap, op
 js/zhuyin-builder.js  # 注音拼音點選積木元件 initZhuyinBuilder(root, syllables, opts)
 js/mistake-review.js  # 錯題複習元件 initMistakeReview(root, opts)，讀 quiz.js 寫入的 forkid:mistakes，去重後列清單，點一筆可跳回原出題元件單獨重練那一題
 js/carry-addition-teach.js # 十位數加法進位教學元件 initCarryAdditionTeach(root, problems, opts)，用十格積木視覺化「個位湊10綁成1個十、搬到十位」，每題拆成算個位/綁十/算十位/看結果四步驟，是教學流程不是測驗，答錯不記錄錯題本
-js/math-quiz.js       # 通用數學測驗引擎 initMathQuiz(root, problemsInput, opts)，加法測驗/減法測驗共用，差異只在 opts.operator（+/-）跟資料內容。problemsInput 給 {chick,snake,tiger} 三層物件會先顯示難度選擇畫面（小雞/蛇/老虎），給單一陣列（錯題複習單題重練用）則跳過難度選擇直接進測驗。一題一個算式 4 選 1，答錯會記錄到 forkid:mistakes
+js/math-quiz.js       # 通用數學測驗引擎 initMathQuiz(root, problemsInput, opts)，加法測驗/減法測驗/分與合練習共用，差異只在 opts.operator（+/-）跟資料內容。problemsInput 給 {chick,snake,tiger} 三層物件會先顯示難度選擇畫面（小雞/蛇/老虎），給單一陣列（錯題複習單題重練用）則跳過難度選擇直接進測驗。題目 {id,a,b} 可另帶 op（覆蓋 operator）、blank（"a"/"b"/"result"，挖空哪格）、show:"house"（用分合屋圖出題）；opts.difficultyDesc 可自訂難度說明。一題一個算式 4 選 1，答錯會記錄到 forkid:mistakes
+js/number-bond.js     # 分與合教學元件 initNumberBond(root, {onBack, onPractice})，三個分頁：🔬探索（點東西移到另一盤 + 所有分法）/ 🏠分合屋（分合屋圖 + 1 加 2 減三個算式 + 可唸出的生活故事）/ 🎯練習（呼叫 onPractice 交給 app.js 開 initMathQuiz）。是教學流程不記錄錯題。也匯出全域 renderBondHouse() 給 math-quiz.js 的 show:"house" 題目共用
 data/english-mc.js    # 英文選擇題題庫（依分類，不綁字母）+ 匯出 ENGLISH_WORDS、ENGLISH_CATEGORY_WORDS 給手寫練習/記憶卡共用
 data/english-letters.js # 英文手寫字母清單（大小寫）
 data/chinese-zhuyin.js # 國語注音符號手寫題庫（37 個符號 + 示範詞 wordMap），upper/lower 設成同一符號搭配 showCaseToggle:false 重用手寫元件
 data/zhuyin-syllables.js # 國語注音拼音積木題庫（常用字拆解成聲母/韻母/聲調）
 data/carry-addition.js # 進位教學題庫（兩位數+兩位數，刻意挑個位相加會超過10、十位相加+進位不超過9的組合），教學元件專用，不分難度
-data/addition-quiz.js # 加法測驗題庫（不進位），{chick,snake,tiger} 三層難度，規則是逐位相加都不超過9
-data/subtraction-quiz.js # 減法測驗題庫（不退位），{chick,snake,tiger} 三層難度，規則是被減數逐位都大於等於減數對應位
+data/addition-quiz.js # 加法測驗題庫（不進位），{chick,snake,tiger} 三層難度＝10 以內 / 兩位數+一位數 / 兩位數+兩位數（小一範圍，不出三位數），規則是逐位相加都不超過9
+data/subtraction-quiz.js # 減法測驗題庫（不退位），{chick,snake,tiger} 三層難度＝10 以內 / 兩位數−一位數 / 兩位數−兩位數，規則是被減數逐位都大於等於減數對應位
+data/number-bond-quiz.js # 分與合練習題庫（10 以內），chick＝分合屋合起來、snake＝分合屋分一分、tiger＝加減算式填空；另匯出 NUMBER_BOND_DIFFICULTY_DESC
 music.html            # 五線譜小樂園（獨立頁面，樣式/腳本內嵌）：認識音階 / 玩音符 / 彈歌曲 / 小測驗
 data/music-songs.js   # 「彈歌曲」歌單，用簡譜字串寫（1 = 中央 Do），載入時自動檢查每小節拍數跟音域，寫錯的歌不上架並在 console 報錯；加歌只改這個檔
 grade1-2_english_vocabulary.md # 國小一二年級英文單字參考清單（出題詞彙來源，唯讀）
@@ -53,6 +55,10 @@ grade1-2_english_vocabulary.md # 國小一二年級英文單字參考清單（�
 手寫練習只要準備 `{ upper, lower }` 陣列 + 一份 `wordMap`（`letter -> {word, emoji}`）即可重用 `initHandwriting`。
 
 **數學計算題（加法/減法測驗）的難度分層慣例**：用「小雞🐥簡單／蛇🐍中等／老虎🐯困難」三種動物代表難度，資料寫成 `{ chick: [...], snake: [...], tiger: [...] }` 三層物件丟給 `initMathQuiz`，元件會先顯示難度選擇畫面（重用 `.category-button.cat-chick/.cat-snake/.cat-tiger`），選完才進測驗。要加新的數學測驗科目，只要準備同樣的三層資料 + 在 `js/app.js` 呼叫 `initMathQuiz(root, data, {operator, icon, categoryLabel, subjectId, onBack, onHome})`，不用改元件本身。錯題複習單題重練時則直接傳單一陣列（不是三層物件）給 `initMathQuiz`，元件會跳過難度選擇直接進入那一題。
+
+**數學題目 id 不能重複使用**：錯題本只靠 `questionId` 對回題目，調整難度分層時，舊題目搬到別層要沿用原本的 id（例如 `add-q-chick-01` 現在在 snake 層），新題目一律用新的 id；把 id 換給不同的算式會讓舊錯題記錄對到錯的題目。
+
+**分與合的顏色約定**：左邊一組＝橘（`#FFF3E0`/`#E65100`）、右邊一組＝綠（`#E8F5E9`/`#166534`）、總數＝紫（紫色漸層 / `#6D28D9`），探索、分合屋、故事、算式、練習題全部一致，讓小朋友靠顏色認出「哪個數字是哪一組」。
 
 **選擇題題庫不是「1 字母 1 題」**：`data/english-mc.js` 用 `CATEGORY_WORDS = { 分類: { 單字: emoji, ... } }` 組織，每個單字各自成一題，干擾選項從同分類單字池隨機抽 3 個。要加新題目只要在對應分類物件裡加一筆 `單字: emoji`；要加新分類，除了加 `CATEGORY_WORDS` 的 key，還要在 `js/quiz.js` 的 `CATEGORY_META` 加 emoji/label、在 `index.html` 的 `.category-list` 加一顆 `.category-button.cat-xxx`、在 `css/style.css` 加對應漸層色（見下方色票）。手寫練習仍維持 `LETTER_WORD`（A~Z 各一個代表單字）獨立維護，不受選擇題分類調整影響。
 

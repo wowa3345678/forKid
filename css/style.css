@@ -1442,4 +1442,459 @@ button {
 .cab-step-caption {
   text-align: center;
 }
+
+/* 加法/減法測驗的根容器原本漏了 flex gap，一起補上 */
+#addition-quiz-root,
+#subtraction-quiz-root,
+#number-bond-quiz-root,
+#number-bond-root {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---------- Number bond 分與合 ---------- */
+/* 顏色約定：左邊一組＝橘、右邊一組＝綠、總數＝紫，探索/分合屋/故事/算式/練習全部一致 */
+.menu-row.accent-bond { border-color: #ede9fe; }
+.menu-row.accent-bond .row-icon { background: var(--purple-grad); }
+.menu-row.accent-bond .row-arrow { color: #7e57c2; }
+
+.nb-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.nb-tab {
+  min-height: 66px;
+  border: 3px solid #ede9fe;
+  border-radius: 18px;
+  background: var(--white);
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--ink-soft);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.nb-tab.is-active {
+  border-color: transparent;
+  background: var(--purple-grad);
+  color: var(--white);
+  box-shadow: 0 6px 20px var(--purple-shadow);
+}
+
+.nb-card {
+  background: var(--white);
+  border: 3px solid #f5f5f4;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.nb-card-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--ink-soft);
+}
+
+.nb-item-row,
+.nb-total-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.nb-item-pick,
+.nb-total-btn {
+  width: 66px;
+  height: 66px;
+  border: 3px solid #ede9fe;
+  border-radius: 16px;
+  background: #faf5ff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.nb-total-btn {
+  font-size: 28px;
+  font-weight: 900;
+  color: #6d28d9;
+}
+
+.nb-item-pick.is-active,
+.nb-total-btn.is-active {
+  border-color: transparent;
+  background: var(--purple-grad);
+  color: var(--white);
+  box-shadow: 0 4px 14px var(--purple-shadow);
+}
+
+.nb-item-img {
+  width: 40px;
+  height: 40px;
+}
+
+.nb-item-emoji {
+  font-size: 36px;
+  line-height: 1;
+}
+
+.nb-plates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.nb-plate {
+  flex: 1 1 240px;
+  border-radius: 18px;
+  border: 3px dashed;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 180px;
+}
+
+.nb-plate.is-left { border-color: #ffa726; background: #fff3e0; }
+.nb-plate.is-right { border-color: #4ade80; background: #e8f5e9; }
+
+.nb-plate-label {
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.nb-plate.is-left .nb-plate-label { color: #e65100; }
+.nb-plate.is-right .nb-plate-label { color: #166534; }
+
+.nb-plate-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.nb-plate-empty {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-faint);
+  padding: 20px 0;
+}
+
+.nb-item {
+  width: 66px;
+  height: 66px;
+  border: none;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.nb-item.is-new {
+  animation: cabPopIn 0.35s ease;
+}
+
+.nb-equation,
+.nb-formula-expr {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.nb-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 34px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.nb-num.is-left { background: #fff3e0; color: #e65100; }
+.nb-num.is-right { background: #e8f5e9; color: #166534; }
+.nb-num.is-total { background: #f3e8ff; color: #6d28d9; }
+
+.nb-op {
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--ink-faint);
+}
+
+.nb-sentence {
+  margin: 0;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.nb-pair-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.nb-pair {
+  min-height: 66px;
+  border: 3px solid #f5f5f4;
+  border-radius: 16px;
+  background: var(--white);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.nb-pair .nb-num {
+  font-size: 24px;
+  min-width: 40px;
+}
+
+.nb-pair .nb-op {
+  font-size: 16px;
+}
+
+.nb-pair.is-active {
+  border-color: #7e57c2;
+  background: #faf5ff;
+}
+
+/* 分合屋圖：js/number-bond.js 的 renderBondHouse()，分與合練習（math-quiz.js show:"house"）也共用 */
+.bond-house {
+  width: 240px;
+  max-width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.bond-roof {
+  width: 170px;
+  height: 130px;
+  background: var(--purple-grad);
+  clip-path: polygon(50% 0, 100% 42%, 100% 100%, 0 100%, 0 42%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 14px;
+}
+
+.bond-total {
+  font-size: 54px;
+  font-weight: 900;
+  color: var(--white);
+  line-height: 1;
+}
+
+.bond-legs {
+  width: 240px;
+  height: 40px;
+}
+
+.bond-legs line {
+  stroke: #7e57c2;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.bond-children {
+  width: 240px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  justify-items: center;
+}
+
+.bond-part {
+  width: 96px;
+  height: 80px;
+  border-radius: 18px;
+  border: 3px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 46px;
+  font-weight: 900;
+}
+
+.bond-part.is-left { border-color: #ffa726; background: #fff3e0; color: #e65100; }
+.bond-part.is-right { border-color: #4ade80; background: #e8f5e9; color: #166534; }
+
+.nb-house-card {
+  align-items: center;
+}
+
+.nb-move-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+}
+
+.nb-move-btn {
+  min-height: 66px;
+  border: 2px solid #e7e5e4;
+  border-radius: 18px;
+  background: var(--white);
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.nb-move-btn:disabled {
+  color: var(--ink-faint);
+  background: #fafaf9;
+  cursor: default;
+}
+
+.nb-story-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.nb-speak-btn {
+  width: 66px;
+  height: 66px;
+  border: none;
+  border-radius: 50%;
+  background: #f3e8ff;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.nb-scene {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.nb-scene .nb-item-img {
+  width: 36px;
+  height: 36px;
+  padding: 4px;
+  border-radius: 10px;
+  box-sizing: content-box;
+}
+
+.nb-scene .nb-item-img.is-left { background: #fff3e0; }
+.nb-scene .nb-item-img.is-right { background: #e8f5e9; }
+
+.nb-story-text {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.nb-reveal-btn {
+  background: var(--purple-grad);
+  box-shadow: 0 6px 20px var(--purple-shadow);
+}
+
+.nb-formula-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nb-formula {
+  background: var(--white);
+  border: 3px solid #f5f5f4;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  animation: slideUp 0.3s ease-out both;
+}
+
+.nb-formula-tag {
+  align-self: flex-start;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.nb-formula-tag.is-add { background: #dbeafe; color: #1d4ed8; }
+.nb-formula-tag.is-sub { background: #fce7f3; color: #be185d; }
+
+.nb-formula-hint {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* 數學測驗挖空格：作答前虛線「?」，作答後填入正確答案變綠 */
+.mq-blank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.4em;
+  padding: 0 0.15em;
+  border: 3px dashed #a78bfa;
+  border-radius: 12px;
+  color: #7e57c2;
+  line-height: 1.15;
+}
+
+.mq-blank.is-filled {
+  border-style: solid;
+  border-color: #22c55e;
+  background: #dcfce7;
+  color: #166534;
+}
+
+/* 分合屋下面兩格本身就是框，挖空時不再多套一層框，改成整格變虛線 */
+.bond-part .mq-blank {
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+.bond-part:has(.mq-blank:not(.is-filled)) {
+  border-style: dashed;
+  border-color: #a78bfa;
+  background: #faf5ff;
+}
+
+.bond-part:has(.mq-blank.is-filled) {
+  border-color: #22c55e;
+  background: #dcfce7;
+}
+
+.bond-roof .mq-blank {
+  border-color: rgba(255, 255, 255, 0.85);
+  color: var(--white);
+}
+
+.bond-roof .mq-blank.is-filled {
+  background: #dcfce7;
+  border-color: #22c55e;
+  color: #166534;
 }

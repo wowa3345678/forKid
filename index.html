@@ -220,11 +220,19 @@
       </div>
 
       <div class="menu-list">
+        <button class="menu-row accent-bond" id="menu-number-bond">
+          <span class="row-icon">🏠</span>
+          <span class="row-text">
+            <span class="row-title">分與合</span>
+            <span class="row-subtitle">把 10 以內的數字分成兩組，再合起來</span>
+          </span>
+          <span class="row-arrow">▶</span>
+        </button>
         <button class="menu-row accent-quiz" id="menu-addition-quiz">
           <span class="row-icon">➕</span>
           <span class="row-text">
             <span class="row-title">加法測驗</span>
-            <span class="row-subtitle">選難度，挑戰不進位的加法計算題</span>
+            <span class="row-subtitle">選難度，挑戰不進位的加法計算題（100 以內）</span>
           </span>
           <span class="row-arrow">▶</span>
         </button>
@@ -232,7 +240,7 @@
           <span class="row-icon">➖</span>
           <span class="row-text">
             <span class="row-title">減法測驗</span>
-            <span class="row-subtitle">選難度，挑戰不退位的減法計算題</span>
+            <span class="row-subtitle">選難度，挑戰不退位的減法計算題（100 以內）</span>
           </span>
           <span class="row-arrow">▶</span>
         </button>
@@ -245,6 +253,14 @@
           <span class="row-arrow">▶</span>
         </button>
       </div>
+    </section>
+
+    <section class="screen" id="screen-number-bond" hidden>
+      <div id="number-bond-root"></div>
+    </section>
+
+    <section class="screen" id="screen-number-bond-quiz" hidden>
+      <div id="number-bond-quiz-root"></div>
     </section>
 
     <section class="screen" id="screen-addition-quiz" hidden>
@@ -341,12 +357,14 @@
   <script src="data/carry-addition.js"></script>
   <script src="data/addition-quiz.js"></script>
   <script src="data/subtraction-quiz.js"></script>
+  <script src="data/number-bond-quiz.js"></script>
   <script src="js/quiz.js"></script>
   <script src="js/handwriting.js"></script>
   <script src="js/memory.js"></script>
   <script src="js/zhuyin-builder.js"></script>
   <script src="js/carry-addition-teach.js"></script>
   <script src="js/math-quiz.js"></script>
+  <script src="js/number-bond.js"></script>
   <script src="js/mistake-review.js"></script>
   <script src="js/app.js"></script>
 </body>
