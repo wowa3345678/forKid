@@ -72,6 +72,32 @@ button {
   font-family: inherit;
 }
 
+/* ---------- iPad 觸控 ---------- */
+/* iOS 會忽略 viewport 的 user-scalable=no，小朋友快速連點按鈕會觸發雙擊放大；
+   manipulation 保留捲動、關掉雙擊縮放。手寫畫布/五線譜自己用 class 設 touch-action:none，優先權較高不受影響。 */
+* {
+  touch-action: manipulation;
+}
+
+/* 長按圖片（題目圖、選項圖都是 Twemoji <img>）不要跳出「儲存影像」選單，也不能拖曳 */
+html, body, img {
+  -webkit-touch-callout: none;
+}
+
+img {
+  -webkit-user-drag: none;
+}
+
+/* 所有可點的東西按下去都縮一下，讓小朋友知道「有點到」。
+   用 :where() 把權重降到最低，已經有自己 :active 效果的元件（subject-card、memory-card…）會優先套用自己的 */
+:where(button:not(:disabled), a, .mistake-row, .mistake-clear-all) {
+  transition: transform 0.1s ease;
+}
+
+:where(button:not(:disabled), a, .mistake-row, .mistake-clear-all):active {
+  transform: scale(0.96);
+}
+
 /* ---------- Buttons: back ---------- */
 .back-pill {
   align-self: flex-start;
@@ -151,8 +177,10 @@ button {
   box-shadow: var(--shadow-sm);
 }
 
+/* 平板一排四張；手機寬度放不下時自動變成兩排兩張 */
 .subject-grid {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 14px;
 }
 
@@ -177,6 +205,7 @@ button {
 .subject-card.cat-english { background: var(--orange-grad); box-shadow: 0 6px 20px var(--orange-shadow); }
 .subject-card.cat-chinese { background: var(--purple-grad); box-shadow: 0 6px 20px var(--purple-shadow); }
 .subject-card.cat-math { background: var(--blue-grad); box-shadow: 0 6px 20px var(--blue-shadow); }
+.subject-card.cat-music { background: var(--teal-grad); box-shadow: 0 6px 20px var(--teal-shadow); text-decoration: none; }
 
 .subject-card:disabled {
   cursor: not-allowed;

@@ -174,7 +174,7 @@ function twemojiUrl(emoji) {
     .filter((cp) => cp !== 0xfe0f)
     .map((cp) => cp.toString(16))
     .join("-");
-  return `https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/72x72/${codepoints}.png`;
+  return `https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.3/assets/72x72/${codepoints}.png`;
 }
 
 // 把答錯的題目記到 localStorage，之後不管哪個科目（國語/數學）共用這一份錯題本。

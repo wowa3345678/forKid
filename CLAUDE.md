@@ -28,7 +28,7 @@ data/carry-addition.js # 進位教學題庫（兩位數+兩位數，刻意挑個
 data/addition-quiz.js # 加法測驗題庫（不進位），{chick,snake,tiger} 三層難度＝10 以內 / 兩位數+一位數 / 兩位數+兩位數（小一範圍，不出三位數），規則是逐位相加都不超過9
 data/subtraction-quiz.js # 減法測驗題庫（不退位），{chick,snake,tiger} 三層難度＝10 以內 / 兩位數−一位數 / 兩位數−兩位數，規則是被減數逐位都大於等於減數對應位
 data/number-bond-quiz.js # 分與合練習題庫（10 以內），chick＝分合屋合起來、snake＝分合屋分一分、tiger＝加減算式填空；另匯出 NUMBER_BOND_DIFFICULTY_DESC
-music.html            # 五線譜小樂園（獨立頁面，樣式/腳本內嵌）：認識音階 / 玩音符 / 彈歌曲 / 小測驗
+music.html            # 五線譜小樂園（獨立頁面，樣式/腳本內嵌，從首頁「音樂」卡片進入，左上角「◀ 返回首頁」回 index.html）：認識音階 / 玩音符 / 彈歌曲 / 小測驗
 data/music-songs.js   # 「彈歌曲」歌單，用簡譜字串寫（1 = 中央 Do），載入時自動檢查每小節拍數跟音域，寫錯的歌不上架並在 console 報錯；加歌只改這個檔
 grade1-2_english_vocabulary.md # 國小一二年級英文單字參考清單（出題詞彙來源，唯讀）
 ```
@@ -66,7 +66,8 @@ grade1-2_english_vocabulary.md # 國小一二年級英文單字參考清單（�
 
 ## 設計決策
 
-- **Emoji 用 Twemoji CDN 圖片**，不用系統字型 emoji：`https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/72x72/{codepoints}.png`（見 `js/quiz.js` 的 `twemojiUrl()`）。原因是 Windows 字型沒有某些 emoji（例如 🩻 X-ray）會顯示空白，CDN 圖片確保所有裝置/瀏覽器長相一致。
+- **Emoji 用 Twemoji CDN 圖片**，不用系統字型 emoji：`https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.3/assets/72x72/{codepoints}.png`（見 `js/quiz.js` 的 `twemojiUrl()`）。原因是 Windows 字型沒有某些 emoji（例如 🩻 X-ray）會顯示空白，CDN 圖片確保所有裝置/瀏覽器長相一致。版本號刻意寫死不用 `@latest`：jsDelivr 解析 `@latest` 較慢、快取不穩，上游改版也可能讓圖片突然變樣；要用新版 emoji 時再手動升版號，升級後要確認題庫用到的每個 emoji 在新版都還在。
+- **iPad 觸控**：`css/style.css` 全站設 `touch-action: manipulation`（防連點觸發雙擊放大，需要 `touch-action:none` 的畫布用 class 覆蓋）、圖片關掉長按選單、所有按鈕用 `:where(...):active` 統一「按下縮一下」的回饋（權重最低，元件自己的 `:active` 會優先）。新元件不用另外處理這三件事。
 - **答錯記錄到 localStorage**，key 是 `forkid:mistakes`，格式 `{subject, questionId, letter, correctAnswer, selectedWrong, timestamp}`，不分科目共用一份錯題本，方便之後做總覽。
 - **選擇題流程是「答錯立刻揭曉正確答案、不能重試，按『下一題』手動前進」**，不是自動跳題或重試到對。這是照抄使用者提供的參考檔 `小一練習.html`（Claude Design 產出的原型）的 UX。
 - **手寫練習保留大小寫切換 + 完整 A~Z**，這點刻意超越參考檔（參考檔原型只做了 6 個大寫字母示範）。
@@ -84,7 +85,7 @@ grade1-2_english_vocabulary.md # 國小一二年級英文單字參考清單（�
 | 主文字 | `#292524` (stone-800) |
 | 副文字 | `#78716C` (stone-500) |
 | 橘色漸層（英文 / 水果 / 選擇題 / 進度條起點） | `linear-gradient(145deg, #FF7043, #FFA726)` |
-| 青色漸層（動物類別） | `linear-gradient(145deg, #26C6DA, #4DB6AC)` |
+| 青色漸層（動物類別 / 音樂卡片） | `linear-gradient(145deg, #26C6DA, #4DB6AC)` |
 | 紫色漸層（其它類別 / 國語卡片） | `linear-gradient(145deg, #AB47BC, #7E57C2)` |
 | 藍色漸層（數學卡片 / 全部類別） | `linear-gradient(145deg, #42A5F5, #5C6BC0)` |
 | 綠色漸層（手寫練習主題色） | `linear-gradient(135deg, #22C55E, #4ADE80)` |

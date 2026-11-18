@@ -47,6 +47,28 @@
     button { font-family: inherit; }
     [hidden] { display: none !important; }
 
+    /* iPad 觸控：防連點雙擊放大、長按圖片不跳選單、按鈕按下縮一下（同 css/style.css） */
+    * { touch-action: manipulation; }
+    html, body, img { -webkit-touch-callout: none; }
+    img { -webkit-user-drag: none; }
+    :where(button:not(:disabled), a) { transition: transform 0.1s ease; }
+    :where(button:not(:disabled), a):active { transform: scale(0.96); }
+
+    .back-pill {
+      align-self: flex-start;
+      display: inline-flex;
+      align-items: center;
+      min-height: 42px;
+      background: var(--white);
+      border-radius: 16px;
+      padding: 10px 18px;
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--ink-soft);
+      text-decoration: none;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    }
+
     #app {
       min-height: 100vh;
       display: flex;
@@ -412,6 +434,7 @@
 <body>
   <div id="app">
     <div id="music-root">
+      <a class="back-pill" href="index.html">◀ 返回首頁</a>
       <div class="m-header">
         <div class="m-title"><span class="m-title-icon">🎵</span>五線譜小樂園</div>
         <button class="chip-button on" id="color-toggle" type="button">🎨 彩色音符</button>
