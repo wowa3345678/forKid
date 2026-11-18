@@ -1,7 +1,8 @@
 // 注音易混淆聽辨元件：吃 data/zhuyin-confusables.js 的 ZHUYIN_LISTEN_GROUPS。
 // 流程：選一組（ㄢㄤ／ㄣㄥ／ㄏㄈ／捲舌不捲舌）→「先聽聽看」教學頁（兩邊的口訣 + 每組字點了就唸）
 // → 選難度練習：🐥 看圖+注音、🐍 只看注音；選擇頁另有 🐯「全部混合」把四組混在一起只看注音。
-// 練習時語音唸一個字，畫面只有兩個注音選項（同一組只差一個音的兩個字），小朋友還不識字，所以畫面上不出現國字。
+// 練習時播一個字的真人錄音（教育部辭典，沒有錄音才退回語音合成），畫面只有兩個注音選項（同一組只差一個音的兩個字），
+// 小朋友還不識字，所以畫面上不出現國字。教學頁兩邊的注音符號可以點，播注音符號手冊的單音錄音。
 // 左邊一組（sides[0]）的關鍵符號標橘色、右邊（sides[1]）標綠色，跟分與合「左橘右綠」的顏色約定一致。
 // 答錯流程跟其它練習一樣「立刻揭曉、不能重試、按下一題前進」，答錯記到 forkid:mistakes（subject: zhuyin-listen）。
 // 作答後兩個選項都可以再點來聽，讓小朋友自己比較兩個音哪裡不一樣。
@@ -23,6 +24,129 @@ function zlFindVoice() {
     || voices.find((v) => /zh[-_]Hant|Taiwan|臺灣|台灣/i.test(`${v.lang} ${v.name}`))
     || voices.find((v) => /^zh/i.test(v.lang))
     || null;
+}
+
+// ---------- 真人錄音播放（教育部辭典 / 注音符號手冊，對照表在 data/zhuyin-audio.js） ----------
+// 台灣中文語音合成本身就 ㄣㄥ 不分、捲舌不明顯（台灣國語的發音演變，語音是照台灣人的聲音訓練的），
+// 所以優先播真人錄音，找不到錄音或載入失敗才退回語音合成。
+// 用 Web Audio 只播原檔開頭字音那一段（start(0, 0, end)），檔案本身不剪不改，符合辭典「禁止改作」授權。
+let zlCtx = null;
+let zlOut = null;
+let zlSources = [];
+const zlBuffers = {};
+
+// iPhone/iPad 的網頁音訊預設走「鈴聲」音量、還會被靜音鍵關掉，聽起來很小聲；
+// audioSession 設成 playback 改走媒體音量。輸出再串一個壓縮器 + 增益，把短短一個字的音量整體拉大。
+function zlAudio() {
+  try {
+    if (navigator.audioSession) navigator.audioSession.type = "playback";
+  } catch (e) { /* 不支援就算了 */ }
+  if (!zlCtx) {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return null;
+    zlCtx = new Ctx();
+    // 參數是用 OfflineAudioContext 實測調的：辭典錄音字音段的平均音量約 -22dB，
+    // 經過這條鏈約 -6 ~ -10dB（大聲 13~16dB），最後的柔性限幅把峰值壓在 0.95 以內不破音
+    const comp = zlCtx.createDynamicsCompressor();
+    comp.threshold.value = -30;
+    comp.knee.value = 10;
+    comp.ratio.value = 12;
+    comp.attack.value = 0.001;
+    comp.release.value = 0.15;
+    const makeup = zlCtx.createGain();
+    makeup.gain.value = 3;
+    const limiter = zlCtx.createWaveShaper();
+    const curve = new Float32Array(2048);
+    for (let i = 0; i < curve.length; i++) {
+      const x = (i / (curve.length - 1)) * 2 - 1;
+      curve[i] = (0.95 * Math.tanh(1.5 * x)) / Math.tanh(1.5);
+    }
+    limiter.curve = curve;
+    comp.connect(makeup).connect(limiter).connect(zlCtx.destination);
+    zlOut = comp;
+  }
+  if (zlCtx.state === "suspended") zlCtx.resume();
+  return zlCtx;
+}
+
+function zlLoad(file) {
+  if (!zlBuffers[file]) {
+    zlBuffers[file] = fetch(file)
+      .then((res) => {
+        if (!res.ok) throw new Error(`${file} ${res.status}`);
+        return res.arrayBuffer();
+      })
+      .then((data) => new Promise((ok, bad) => zlCtx.decodeAudioData(data, ok, bad)))
+      .catch((err) => {
+        delete zlBuffers[file];
+        throw err;
+      });
+  }
+  return zlBuffers[file];
+}
+
+function zlStop() {
+  zlSources.forEach((src) => { try { src.stop(); } catch (e) { /* 已經停了 */ } });
+  zlSources = [];
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+}
+
+function zlCharClip(char) {
+  const a = (window.ZHUYIN_CHAR_AUDIO || {})[char];
+  return a && { file: a.file, end: a.end, gain: 1 };
+}
+
+function zlSymbolClip(sym) {
+  const a = (window.ZHUYIN_SYMBOL_AUDIO || {})[sym];
+  return a && { file: a.file, end: null, gain: a.gain };
+}
+
+// 依序播放幾段錄音，中間空 0.6 秒；結尾 40ms 淡出避免「啪」一聲
+async function zlPlayClips(clips) {
+  const ctx = zlAudio();
+  if (!ctx) throw new Error("no Web Audio");
+  zlStop();
+  const buffers = await Promise.all(clips.map((c) => zlLoad(c.file)));
+  let t = ctx.currentTime + 0.05;
+  buffers.forEach((buf, i) => {
+    const clip = clips[i];
+    const dur = clip.end ? Math.min(clip.end, buf.duration) : buf.duration;
+    const src = ctx.createBufferSource();
+    const g = ctx.createGain();
+    src.buffer = buf;
+    g.gain.setValueAtTime(clip.gain, t);
+    g.gain.setValueAtTime(clip.gain, t + dur - 0.04);
+    g.gain.linearRampToValueAtTime(0, t + dur);
+    src.connect(g).connect(zlOut);
+    src.start(t, 0, dur);
+    zlSources.push(src);
+    t += dur + 0.6;
+  });
+}
+
+// 先把題目會用到的字載好，按下去才不會等
+function zlPreload(chars) {
+  if (!zlAudio()) return;
+  chars.forEach((c) => {
+    const clip = zlCharClip(c);
+    if (clip) zlLoad(clip.file).catch(() => {});
+  });
+}
+
+// 唸字：全部都有真人錄音就播錄音，否則（或載入失敗）用語音合成
+function zlSay(chars) {
+  const clips = chars.map(zlCharClip);
+  if (clips.every(Boolean)) {
+    zlPlayClips(clips).catch(() => zlSpeak(chars));
+  } else {
+    zlSpeak(chars);
+  }
+}
+
+// 唸注音符號本身的音（注音符號手冊錄音），沒有錄音就不出聲
+function zlSaySymbol(sym) {
+  const clip = zlSymbolClip(sym);
+  if (clip) zlPlayClips([clip]).catch(() => {});
 }
 
 // 一次唸一個或依序唸好幾個字；每個字各自一個 utterance，避免語音把兩個字連成詞而變調
@@ -108,7 +232,7 @@ function initZhuyinListen(root, groups, { onBack, onHome, subjectId = "zhuyin-li
 
   function speakTarget() {
     const q = state.questions[state.index];
-    if (q) zlSpeak([itemOf(q, q.target).char]);
+    if (q) zlSay([itemOf(q, q.target).char]);
   }
 
   function zhuyinHtml(item, group, side) {
@@ -130,7 +254,17 @@ function initZhuyinListen(root, groups, { onBack, onHome, subjectId = "zhuyin-li
     else renderQuestion();
   }
 
+  // 每個字都有真人錄音時不需要語音合成，就不顯示語音相關提示
+  function charsWithoutAudio() {
+    return zlQuestionsOf(groups).map((q) => itemOf(q, q.target).char).filter((c) => !zlCharClip(c));
+  }
+
+  function attribution() {
+    return `<p class="zl-credit">發音來源：中華民國教育部（Ministry of Education, R.O.C.）《國語辭典簡編本》（版本編號：2014_20260929）https://dict.concised.moe.edu.tw/ ，依 CC BY-ND 3.0 TW 授權使用、原檔未修改；注音符號發音：2017 © 教育部，國語注音符號手冊-開放部件（CC BY 4.0）。</p>`;
+  }
+
   function voiceWarning() {
+    if (charsWithoutAudio().length === 0) return "";
     if (!("speechSynthesis" in window)) {
       return `<div class="info-banner"><span class="info-emoji">⚠️</span><span>這個瀏覽器不支援語音，題目唸不出來。</span></div>`;
     }
@@ -164,6 +298,7 @@ function initZhuyinListen(root, groups, { onBack, onHome, subjectId = "zhuyin-li
         </button>
       </div>
       <button class="zl-parent-link" id="zl-parent">👂 家長試聽清單</button>
+      ${attribution()}
     `;
     root.querySelector("#zl-back").addEventListener("click", () => onBack && onBack());
     root.querySelectorAll("[data-group]").forEach((btn) => {
@@ -195,10 +330,13 @@ function initZhuyinListen(root, groups, { onBack, onHome, subjectId = "zhuyin-li
 
   function bindWordButtons() {
     root.querySelectorAll(".zl-word").forEach((btn) => {
-      btn.addEventListener("click", () => zlSpeak([btn.dataset.char]));
+      btn.addEventListener("click", () => zlSay([btn.dataset.char]));
     });
     root.querySelectorAll(".zl-pair-play").forEach((btn) => {
-      btn.addEventListener("click", () => zlSpeak(btn.dataset.chars.split(",")));
+      btn.addEventListener("click", () => zlSay(btn.dataset.chars.split(",")));
+    });
+    root.querySelectorAll(".zl-symbol").forEach((btn) => {
+      btn.addEventListener("click", () => zlSaySymbol(btn.dataset.sym));
     });
   }
 
@@ -210,13 +348,16 @@ function initZhuyinListen(root, groups, { onBack, onHome, subjectId = "zhuyin-li
       <div class="zl-sides">
         ${group.sides.map((side, i) => `
           <div class="zl-side zl-side-${i === 0 ? "a" : "b"}">
-            <span class="zl-side-symbol">${side.symbols.join(" ")}</span>
+            <span class="zl-side-symbols">
+              ${side.symbols.map((sym) => `<button class="zl-symbol" data-sym="${sym}" aria-label="聽 ${sym} 的音">${sym}</button>`).join("")}
+            </span>
             ${side.label !== side.symbols[0] ? `<span class="zl-side-label">${escapeHtml(side.label)}</span>` : ""}
             <span class="zl-side-tip">${escapeHtml(side.tip)}</span>
           </div>
         `).join("")}
       </div>
-      <p class="zl-section-label">👂 點一點，聽聽看哪裡不一樣（中間的 🔁 會兩個連著唸）</p>
+      <p class="zl-section-label">👆 點上面的注音符號，聽它自己的音</p>
+      <p class="zl-section-label">👂 再點下面的字，聽聽看哪裡不一樣（中間的 🔁 會兩個連著唸）</p>
       <div class="zl-pair-list">
         ${group.pairs.map((pair) => `
           <div class="zl-pair-row">
@@ -252,6 +393,7 @@ function initZhuyinListen(root, groups, { onBack, onHome, subjectId = "zhuyin-li
   // 給家長用：每個字都顯示國字，方便在實際裝置上逐一聽過，確認語音沒有唸錯聲調或破音字
   function renderParent() {
     const voice = zlFindVoice();
+    const missing = charsWithoutAudio();
     root.innerHTML = `
       <button class="back-pill" id="zl-back">◀ 返回</button>
       <h2 class="section-heading">家長試聽清單</h2>
@@ -259,7 +401,9 @@ function initZhuyinListen(root, groups, { onBack, onHome, subjectId = "zhuyin-li
       ${voiceWarning()}
       <div class="info-banner">
         <span class="info-emoji">🗣️</span>
-        <span>目前使用的語音：${voice ? `${escapeHtml(voice.name)}（${escapeHtml(voice.lang)}）` : "（瀏覽器預設）"}</span>
+        <span>${missing.length === 0
+          ? "全部的字都用教育部辭典的真人錄音。"
+          : `${escapeHtml(missing.join("、"))} 沒有真人錄音，改用語音合成：${voice ? `${escapeHtml(voice.name)}（${escapeHtml(voice.lang)}）` : "瀏覽器預設語音"}`}</span>
       </div>
       ${groups.map((group) => `
         <div class="zl-parent-group">
@@ -275,6 +419,7 @@ function initZhuyinListen(root, groups, { onBack, onHome, subjectId = "zhuyin-li
           </div>
         </div>
       `).join("")}
+      ${attribution()}
     `;
     root.querySelector("#zl-back").addEventListener("click", () => {
       state.view = "select";
@@ -296,6 +441,7 @@ function initZhuyinListen(root, groups, { onBack, onHome, subjectId = "zhuyin-li
     const progressPct = Math.round((state.index / state.questions.length) * 100);
     const showEmoji = state.mode === "chick";
     const isCorrect = state.selectedSide === q.target;
+    zlPreload([q.pair.a.char, q.pair.b.char]);
 
     root.innerHTML = `
       <div class="quiz-header">
@@ -336,7 +482,7 @@ function initZhuyinListen(root, groups, { onBack, onHome, subjectId = "zhuyin-li
     `;
 
     root.querySelector("#zl-back").addEventListener("click", () => {
-      if ("speechSynthesis" in window) speechSynthesis.cancel();
+      zlStop();
       if (retry) {
         onBack && onBack();
       } else {
@@ -349,7 +495,7 @@ function initZhuyinListen(root, groups, { onBack, onHome, subjectId = "zhuyin-li
     root.querySelectorAll(".zl-option").forEach((btn) => {
       btn.addEventListener("click", () => {
         if (state.answered) {
-          zlSpeak([itemOf(q, btn.dataset.side).char]);
+          zlSay([itemOf(q, btn.dataset.side).char]);
         } else {
           handleAnswer(btn.dataset.side, q);
         }
@@ -393,7 +539,7 @@ function initZhuyinListen(root, groups, { onBack, onHome, subjectId = "zhuyin-li
     } else {
       playWrongSound();
     }
-    setTimeout(() => zlSpeak([target.char]), 400);
+    setTimeout(() => zlSay([target.char]), 400);
   }
 
   function renderResult() {
