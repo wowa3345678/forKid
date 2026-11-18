@@ -1898,3 +1898,255 @@ button {
   border-color: #22c55e;
   color: #166534;
 }
+
+/* ---------- Zhuyin listen 注音聽聽看（易混淆聽辨） ---------- */
+/* 顏色約定沿用分與合：左邊一組（ㄢ/ㄣ/ㄏ/捲舌）＝橘、右邊一組（ㄤ/ㄥ/ㄈ/不捲舌）＝綠 */
+#zhuyin-listen-root {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.menu-row.accent-listen { border-color: #cffafe; }
+.menu-row.accent-listen .row-icon { background: var(--teal-grad); }
+.menu-row.accent-listen .row-arrow { color: #26c6da; }
+
+.category-button.cat-zl-1 { background: var(--orange-grad); box-shadow: 0 6px 20px var(--orange-shadow); }
+.category-button.cat-zl-2 { background: var(--teal-grad); box-shadow: 0 6px 20px var(--teal-shadow); }
+.category-button.cat-zl-3 { background: var(--purple-grad); box-shadow: 0 6px 20px var(--purple-shadow); }
+.category-button.cat-zl-4 { background: var(--rose-grad); box-shadow: 0 6px 20px var(--rose-shadow); }
+
+.category-button .zl-row-icon {
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.zl-parent-link {
+  align-self: center;
+  background: none;
+  border: none;
+  color: var(--ink-soft);
+  font-size: 15px;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.zl-sides {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.zl-side {
+  border-radius: var(--radius-md);
+  border: 3px solid;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.zl-side-a { background: #fff3e0; border-color: #ffcc80; color: #e65100; }
+.zl-side-b { background: #e8f5e9; border-color: #a5d6a7; color: #166534; }
+
+.zl-side-symbol {
+  font-size: 44px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.zl-side-label {
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.zl-side-tip {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.zl-section-label {
+  margin: 4px 0 -6px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+.zl-pair-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.zl-pair-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.zl-word {
+  background: var(--white);
+  border: 3px solid;
+  border-radius: 18px;
+  min-height: 66px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  color: var(--ink);
+}
+
+.zl-word-a { border-color: #ffcc80; }
+.zl-word-b { border-color: #a5d6a7; }
+.zl-word:active { transform: scale(0.97); }
+
+.zl-word-emoji {
+  width: 40px;
+  height: 40px;
+  font-size: 36px;
+  line-height: 1;
+}
+
+.zl-word-char {
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.zl-zhuyin {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.zl-key {
+  border-radius: 8px;
+  padding: 0 3px;
+}
+
+.zl-key-a { background: #fff3e0; color: #e65100; }
+.zl-key-b { background: #e8f5e9; color: #166534; }
+
+.zl-pair-play {
+  width: 56px;
+  min-height: 66px;
+  border: none;
+  border-radius: 16px;
+  background: var(--white);
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.zl-parent-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.zl-parent-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.zl-prompt-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.zl-speak-big {
+  width: 120px;
+  height: 120px;
+  border: none;
+  border-radius: 50%;
+  background: var(--teal-grad);
+  box-shadow: 0 6px 20px var(--teal-shadow);
+  font-size: 56px;
+  cursor: pointer;
+}
+
+.zl-speak-big:active { transform: scale(0.95); }
+
+.zl-prompt-emoji {
+  width: clamp(90px, 18vw, 120px);
+  height: clamp(90px, 18vw, 120px);
+  font-size: clamp(80px, 16vw, 110px);
+  line-height: 1;
+}
+
+.zl-options .option-button {
+  padding: 18px 16px;
+  min-height: 110px;
+}
+
+.zl-options .option-button .zl-zhuyin {
+  font-size: clamp(34px, 7vw, 48px);
+}
+
+.zl-options .option-button.has-emoji {
+  flex-direction: column;
+  gap: 8px;
+}
+
+.zl-option-emoji {
+  width: clamp(64px, 12vw, 88px);
+  height: clamp(64px, 12vw, 88px);
+  font-size: clamp(56px, 11vw, 80px);
+  line-height: 1;
+}
+
+/* 作答後兩個選項還能點來聽，所以不用 disabled，改用游標提示 */
+.zl-options .option-button.correct,
+.zl-options .option-button.wrong,
+.zl-options .option-button.dim {
+  cursor: pointer;
+}
+
+/* 作答後正確/錯誤底色已經有顏色，關鍵符號的底色拿掉，只保留文字顏色 */
+.zl-options .option-button.correct .zl-key,
+.zl-options .option-button.wrong .zl-key { background: none; }
+.zl-options .option-button.dim .zl-key { background: none; color: inherit; }
+
+.zl-hint {
+  margin: -4px 0;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+/* 手機寬度：字組按鈕改成圖在上、注音在下，避免注音被擠到斷行 */
+@media (max-width: 520px) {
+  .zl-word {
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 6px;
+  }
+
+  .zl-word .zl-zhuyin,
+  .zl-word-char {
+    font-size: 24px;
+  }
+
+  .zl-pair-play {
+    width: 44px;
+  }
+
+  .zl-side-symbol {
+    font-size: 34px;
+  }
+}

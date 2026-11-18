@@ -14,6 +14,7 @@ js/quiz.js            # 通用選擇題元件 initQuiz(root, questions, opts)
 js/handwriting.js     # 通用手寫練習元件 initHandwriting(root, letters, opts)，沒有大小寫概念的科目（如注音）可傳 showCaseToggle:false 隱藏大小寫切換 UI
 js/memory.js          # 通用翻牌記憶卡元件 initMemory(root, wordMap, opts)
 js/zhuyin-builder.js  # 注音拼音點選積木元件 initZhuyinBuilder(root, syllables, opts)
+js/zhuyin-listen.js   # 注音易混淆聽辨元件 initZhuyinListen(root, groups, opts)：選一組（ㄢㄤ/ㄣㄥ/ㄏㄈ/捲舌不捲舌）→「先聽聽看」教學頁（口訣 + 字組點了就唸）→ 🐥看圖+注音 / 🐍只看注音 練習；選擇頁另有 🐯 四組混合、👂 家長試聽清單（顯示國字 + 目前用哪個語音，給家長在實機上檢查語音有沒有唸錯）。語音唸一個字、二選一點注音作答，畫面不出現國字（小朋友還不識字）。答錯記錄錯題本（subject: zhuyin-listen），錯題重練傳 opts.retry={questions:[q]}。也匯出 zlQuestionsOf(groups) 給錯題複習用 id 找回題目
 js/mistake-review.js  # 錯題複習元件 initMistakeReview(root, opts)，讀 quiz.js 寫入的 forkid:mistakes，去重後列清單，點一筆可跳回原出題元件單獨重練那一題
 js/carry-addition-teach.js # 十位數加法進位教學元件 initCarryAdditionTeach(root, problems, opts)，用十格積木視覺化「個位湊10綁成1個十、搬到十位」，每題拆成算個位/綁十/算十位/看結果四步驟，是教學流程不是測驗，答錯不記錄錯題本
 js/math-quiz.js       # 通用數學測驗引擎 initMathQuiz(root, problemsInput, opts)，加法測驗/減法測驗/分與合練習共用，差異只在 opts.operator（+/-）跟資料內容。problemsInput 給 {chick,snake,tiger} 三層物件會先顯示難度選擇畫面（小雞/蛇/老虎），給單一陣列（錯題複習單題重練用）則跳過難度選擇直接進測驗。題目 {id,a,b} 可另帶 op（覆蓋 operator）、blank（"a"/"b"/"result"，挖空哪格）、show:"house"（用分合屋圖出題）；opts.difficultyDesc 可自訂難度說明。一題一個算式 4 選 1，答錯會記錄到 forkid:mistakes
@@ -22,6 +23,7 @@ data/english-mc.js    # 英文選擇題題庫（依分類，不綁字母）+ 匯
 data/english-letters.js # 英文手寫字母清單（大小寫）
 data/chinese-zhuyin.js # 國語注音符號手寫題庫（37 個符號 + 示範詞 wordMap），upper/lower 設成同一符號搭配 showCaseToggle:false 重用手寫元件
 data/zhuyin-syllables.js # 國語注音拼音積木題庫（常用字拆解成聲母/韻母/聲調）
+data/zhuyin-confusables.js # 注音易混淆聽辨題庫 ZHUYIN_LISTEN_GROUPS，每組 sides[0]/sides[1] 是兩邊的音（左橘右綠），pairs 是只差那個音、聲調相同、非破音字的兩個字（每個 pair 拆成 -a/-b 兩題，id 不能重複使用）。ㄖ 跟 ㄌ 配對放在「捲舌 vs 不捲舌」組
 data/carry-addition.js # 進位教學題庫（兩位數+兩位數，刻意挑個位相加會超過10、十位相加+進位不超過9的組合），教學元件專用，不分難度
 data/addition-quiz.js # 加法測驗題庫（不進位），{chick,snake,tiger} 三層難度＝10 以內 / 兩位數+一位數 / 兩位數+兩位數（小一範圍，不出三位數），規則是逐位相加都不超過9
 data/subtraction-quiz.js # 減法測驗題庫（不退位），{chick,snake,tiger} 三層難度＝10 以內 / 兩位數−一位數 / 兩位數−兩位數，規則是被減數逐位都大於等於減數對應位

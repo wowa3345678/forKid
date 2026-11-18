@@ -23,6 +23,16 @@ const MISTAKE_LOOKUP = {
       launch: (root, opts) => initZhuyinBuilder(root, [s], opts)
     };
   },
+  "zhuyin-listen": (questionId) => {
+    const groups = window.ZHUYIN_LISTEN_GROUPS || [];
+    const q = zlQuestionsOf(groups).find((item) => item.id === questionId);
+    if (!q) return null;
+    return {
+      emoji: q.pair[q.target].emoji,
+      categoryLabel: "注音聽聽看",
+      launch: (root, opts) => initZhuyinListen(root, groups, { ...opts, retry: { questions: [q] } })
+    };
+  },
   "addition-quiz": (questionId) => {
     const pools = window.ADDITION_QUIZ_PROBLEMS || {};
     const q = [...(pools.chick || []), ...(pools.snake || []), ...(pools.tiger || [])].find((item) => item.id === questionId);

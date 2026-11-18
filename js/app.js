@@ -39,6 +39,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  document.querySelector("#menu-zhuyin-listen").addEventListener("click", () => {
+    const zhuyinListenRoot = document.querySelector("#zhuyin-listen-root");
+    navigateTo("screen-zhuyin-listen");
+    initZhuyinListen(zhuyinListenRoot, ZHUYIN_LISTEN_GROUPS, {
+      onBack: () => navigateTo("screen-chinese-menu"),
+      onHome: () => navigateTo("screen-home")
+    });
+  });
+
   // 數學：先進選單，「加法測驗／減法測驗／分與合練習」都用 initMathQuiz 共用引擎，先選難度（小雞/蛇/老虎）再進測驗
   document.querySelector("#home-math").addEventListener("click", () => {
     navigateTo("screen-math-menu");
@@ -198,6 +207,13 @@ document.addEventListener("DOMContentLoaded", () => {
           const zhuyinBuilderRoot = document.querySelector("#zhuyin-builder-root");
           navigateTo("screen-zhuyin-builder");
           info.launch(zhuyinBuilderRoot, {
+            onBack: openMistakeReview,
+            onHome: () => navigateTo("screen-home")
+          });
+        } else if (subject === "zhuyin-listen") {
+          const zhuyinListenRoot = document.querySelector("#zhuyin-listen-root");
+          navigateTo("screen-zhuyin-listen");
+          info.launch(zhuyinListenRoot, {
             onBack: openMistakeReview,
             onHome: () => navigateTo("screen-home")
           });
